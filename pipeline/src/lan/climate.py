@@ -124,7 +124,7 @@ def build_cell(df: pd.DataFrame, cell: str) -> dict:
     return {"v": 1, "id": cell, "lat": lat, "lon": lon, "years": years}
 
 
-def fetch_power(lat: float, lon: float, end: dt.date, session=None, tries: int = 4) -> dict:
+def fetch_power(lat: float, lon: float, end: dt.date, session=None, tries: int = 7) -> dict:
     import requests
 
     s = session or requests.Session()
@@ -137,6 +137,7 @@ def fetch_power(lat: float, lon: float, end: dt.date, session=None, tries: int =
         try:
             r = s.get(POWER_URL, params=params, timeout=180)
             if r.status_code == 429:
+                last = "429 Too Many Requests"
                 time.sleep(20 * (i + 1))
                 continue
             r.raise_for_status()
@@ -158,14 +159,21 @@ def run(cells: list[str], out_dir: Path, raw_dir: Path, workers: int = 3) -> Non
     end = dt.date.today() - dt.timedelta(days=1)
     session = requests.Session()
 
-    def one(cell: str) -> str:
-        raw = raw_dir / f"{cell}.json"
-        if not raw.exists():
-            lat, lon = cell_center(cell)
-            raw.write_text(json.dumps(fetch_power(lat, lon, end, session)), encoding="utf-8")
-        df = parse_power(json.loads(raw.read_text(encoding="utf-8")))
-        (out_dir / f"{cell}.json").write_text(json.dumps(build_cell(df, cell), separators=(",", ":")), encoding="utf-8")
-        return cell
+    def one(cell: str) -> str | None:
+        # a failed cell is reported and skipped; a rerun fetches only what is missing
+        if (out_dir / f"{cell}.json").exists():
+            return cell
+        try:
+            raw = raw_dir / f"{cell}.json"
+            if not raw.exists():
+                lat, lon = cell_center(cell)
+                raw.write_text(json.dumps(fetch_power(lat, lon, end, session)), encoding="utf-8")
+            df = parse_power(json.loads(raw.read_text(encoding="utf-8")))
+            (out_dir / f"{cell}.json").write_text(json.dumps(build_cell(df, cell), separators=(",", ":")), encoding="utf-8")
+            return cell
+        except Exception as e:
+            print(f"climate cell {cell} failed: {e}", flush=True)
+            return None
 
     done = 0
     with ThreadPoolExecutor(max_workers=workers) as pool:

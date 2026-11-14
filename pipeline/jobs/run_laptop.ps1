@@ -14,7 +14,7 @@
 # Without -Lane the script clears old claims and opens -Lanes windows; with -Lane N it is one lane.
 #   USA: -Region us -Years 2026 -From 1 -To 784   (tiles_us.txt, work/fields_us, work/ndvi_us)
 param([int]$From = 41, [int]$To = 90, [int]$Workers = 4, [int]$Lanes = 4, [int]$Lane = 0,
-      [string]$Region = 'ua', [string]$Years = '2026,2025,2024,2023,2022,2021,2020,2019,2018,2017,2016')
+      [string]$Region = 'ua', [string[]]$Years = @('2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016'))
 
 $ErrorActionPreference = 'Continue'
 Set-Location (Join-Path $PSScriptRoot '..')
@@ -26,7 +26,9 @@ $fieldsDir = (Resolve-Path "..\data\work\fields$sfx").Path
 $claims = Join-Path $env:LAN_LOGS_DIR "claims$sfx"
 $log = Join-Path $env:LAN_LOGS_DIR "run_laptop$sfx.log"
 $tiles = Get-Content (Join-Path $env:LAN_LOGS_DIR "tiles$sfx.txt") | ForEach-Object { ($_ -split ' ')[0] }
-$years = $Years -split ',' | ForEach-Object { [int]$_ }
+# PowerShell names are case-insensitive: a local "$years" would overwrite the [string] parameter and splat
+# its characters ("2026" -> 2 0 2 6). Keep a separately named int list; accept "2025,2024" and 2025,2024.
+$yearList = @((($Years -join ',') -split '[,\s]+') | Where-Object { $_ } | ForEach-Object { [int]$_ })
 $vpsNdvi = "lan/data/work/ndvi$sfx/"
 $vps = $env:LAN_VPS
 $sshArgs = @('-i', $env:LAN_VPS_KEY, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20',
@@ -40,7 +42,7 @@ if ($Lane -eq 0) {
   New-Item -ItemType Directory -Force -Path $claims | Out-Null
   for ($i = 1; $i -le $Lanes; $i++) {
     Start-Process powershell -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath,
-      '-From', $From, '-To', $To, '-Workers', $Workers, '-Lane', $i, '-Region', $Region, '-Years', $Years)
+      '-From', $From, '-To', $To, '-Workers', $Workers, '-Lane', $i, '-Region', $Region, '-Years', ($yearList -join ','))
     Start-Sleep -Seconds 3
   }
   exit 0
@@ -61,9 +63,11 @@ function VpsStarted([string]$tile) {
 }
 
 function PushMarkers([string]$tile) {
-  $ok = Get-ChildItem -Path $ndvi -Filter "${tile}_*.ok" | ForEach-Object { $_.FullName }
-  if ($ok) { & scp @sshArgs -q @ok "${vps}:$vpsNdvi" 2>$null; return $LASTEXITCODE -eq 0 }
-  return $false
+  # relative names: Git's scp reads "C:\..." as a host called "C"
+  $ok = Get-ChildItem -Path $ndvi -Filter "${tile}_*.ok" | ForEach-Object { $_.Name }
+  if (-not $ok) { return $false }
+  Push-Location $ndvi
+  try { & scp @sshArgs -q @ok "${vps}:$vpsNdvi" 2>$null; return $LASTEXITCODE -eq 0 } finally { Pop-Location }
 }
 
 function Claim([string]$tile) {
@@ -72,7 +76,7 @@ function Claim([string]$tile) {
 
 function RunTile([string]$tile, [int]$w) {
   # each lane appends its JSON lines through .NET (UTF-8), so parallel lanes do not garble the log
-  & uv run -q python jobs/run_tile.py $tile @years --workers $w --fields $fieldsDir --out $ndvi 2>&1 | ForEach-Object {
+  & uv run -q python jobs/run_tile.py $tile @yearList --workers $w --fields $fieldsDir --out $ndvi 2>&1 | ForEach-Object {
     $s = "$_"; Write-Host $s; [System.IO.File]::AppendAllText($log, "$s`r`n", $utf8) }
   return $LASTEXITCODE
 }
@@ -80,8 +84,9 @@ function RunTile([string]$tile, [int]$w) {
 Say "start ($Workers download threads)"
 for ($n = $To; $n -ge $From; $n--) {
   $tile = $tiles[$n - 1]
-  $done = @(Get-ChildItem -Path $ndvi -Filter "${tile}_*.ok" -ErrorAction SilentlyContinue).Count
-  if ($done -ge $years.Count) { continue }
+  # only the seasons this run asks for count as done (a second pass over other years must not skip the tile)
+  $done = @($yearList | Where-Object { Test-Path (Join-Path $ndvi "${tile}_$_.ok") }).Count
+  if ($done -ge $yearList.Count) { continue }
   if (-not (Claim $tile)) { continue }
   $started = VpsStarted $tile
   if ($started -eq 'yes') { Say "tile $n $tile already started on the VPS: queues met, stopping"; break }

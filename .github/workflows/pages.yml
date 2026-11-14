@@ -35,6 +35,7 @@ jobs:
         env:
           LAN_BASE: /lan/
           VITE_DATA_BASE: /lan-data
+          VITE_US_DATA_BASE: https://pub-4a01450758144017a0f1b09a528748df.r2.dev/us
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

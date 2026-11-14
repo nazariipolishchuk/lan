@@ -84,6 +84,12 @@ def oblast_fields(code: str, columns=None):
     return load_fields(UA / code / "fields", columns=columns)
 
 
+def oblast_table(code: str, columns: list[str]) -> pd.DataFrame:
+    """Attribute columns of an oblast's fields without decoding geometry (fast for 1 M-field US states)."""
+    t = pq.read_table(UA / code / "fields", columns=columns).to_pandas()
+    return t.drop_duplicates("id") if "id" in t.columns else t
+
+
 # ---------- soil and terrain ----------
 
 def prep(code: str) -> None:
@@ -93,7 +99,17 @@ def prep(code: str) -> None:
     f = oblast_fields(code)
     if not (d / "soil.parquet").exists():
         t = time.time()
-        s = soil.build(f[["id", "lon", "lat"]])
+        s = None
+        for attempt in range(3):  # SoilGrids is read over the network; a failed window read is retried
+            try:
+                s = soil.build(f[["id", "lon", "lat"]])
+                break
+            except Exception as e:
+                log(f"{code} soil attempt {attempt + 1} failed: {e}")
+                time.sleep(10)
+        if s is None:
+            log(f"{code} soil skipped (fields keep 'soil unknown')")
+            s = pd.DataFrame(index=f["id"].to_numpy(), columns=["clay", "sand", "soc", "ph"], dtype="float64")
         s.to_parquet(d / "soil.parquet")
         log(f"{code} soil: {len(s)} fields, missing {int(s['clay'].isna().sum())}, {time.time() - t:.0f}s")
     if not (d / "terrain.parquet").exists():
@@ -291,6 +307,13 @@ def merge() -> None:
             size += _dump_gz(dst / f"{ck}.json.gz", doc)
         log(f"{kind}: {len(frags)} chunks, {size / 1e6:.1f} MB gzip")
     tiles = sorted({t for i in infos for t in i["tiles"]})
+    if REGION == "us":
+        # USA history 2018–2025 is USDA's own crop record; accuracy numbers of the Ukrainian model do not apply
+        write_meta(OUT_DIR, sorted({t for i in infos for t in i["tiles"]}), None,
+                   oblasts={i["code"]: {"name": i["oblast"], "fields": i["fields"], "withHistory": i["withHistory"],
+                                        "bbox": i["bbox"], "tiles": f"tiles/fields-{i['code']}.pmtiles"} for i in infos})
+        log(f"meta (USA): {len(infos)} states, {sum(i['fields'] for i in infos)} fields")
+        return
     metrics = json.loads((WORK_DIR / "metrics.json").read_text(encoding="utf-8"))
     g = metrics["group"]
     acc = {"macroF1": g["macroF1"], "perClass": g["perClass"], "n": g["n"], "labelSource": g["labelSource"],
@@ -353,7 +376,7 @@ def oblast_layer(scores: dict) -> None:
         props: dict = {"code": code, "name": OBLASTS.get(code, ft["properties"]["shapeName"]), "fields": 0, "hist": 0}
         d = UA / code
         if (d / "oblast.json").exists():
-            f = oblast_fields(code, columns=["id", "small"])
+            f = oblast_table(code, ["id", "small"])
             hist = history_items(pd.read_parquet(d / "history.parquet")) if (d / "history.parquet").exists() else {}
             lg = np.array([last_group(hist.get(i)) for i in f["id"]])
             known = lg >= 0
@@ -381,6 +404,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("step", choices=["split", "prep", "tiles-index", "oblast", "validate", "merge", "geojson"])
     ap.add_argument("codes", nargs="*")
+    ap.add_argument("--force", action="store_true", help="geojson: rewrite existing files")
+    ap.add_argument("--layer", action="store_true", help="geojson: also write oblasts.json for these codes")
     a = ap.parse_args()
     logging.disable(logging.WARNING)
     UA.mkdir(parents=True, exist_ok=True)
@@ -403,11 +428,21 @@ def main() -> int:
     elif a.step == "merge":
         merge()
     elif a.step == "geojson":
-        scores = json.loads((UA / "scores.json").read_text(encoding="utf-8"))
-        for c in codes_arg(a.codes):
-            if (UA / c / "oblast.json").exists():
+        codes = [c for c in codes_arg(a.codes) if (UA / c / "oblast.json").exists()]
+        if (UA / "scores.tsv").exists():  # large builds: read only the fields of the requested regions
+            sc = pd.read_csv(UA / "scores.tsv", sep="	", dtype={"id": str, "rh": "int16", "dr": "int16"})
+            want = set()
+            for c in codes:
+                want |= set(oblast_table(c, ["id"])["id"])
+            sc = sc[sc["id"].isin(want)]
+            scores = {i: {"rh": int(r), "dr": int(d)} for i, r, d in zip(sc["id"], sc["rh"], sc["dr"])}
+        else:
+            scores = json.loads((UA / "scores.json").read_text(encoding="utf-8"))
+        for c in codes:
+            if not (UA / c / f"fields-{c}.geojsonseq").exists() or a.force:
                 geojson(c, scores)
-        oblast_layer(scores)
+        if not a.codes or a.codes == ["all"] or a.layer:
+            oblast_layer(scores)
     return 0
 
 

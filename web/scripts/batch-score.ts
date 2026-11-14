@@ -3,7 +3,7 @@
 //   dr = summer drought years out of the last 20 in the field's climate cell (−1 unknown): the water balance
 //        (rain − evaporation demand) around maize flowering, about July, below the hazard threshold
 // Usage (bundled by scripts/batch-score.mjs): node batch-score.bundle.mjs <out dir> <rules dir> <scores.json> [YYYY-MM-DD]
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { closeSync, openSync, readFileSync, readdirSync, writeFileSync, writeSync } from 'node:fs'
 import { join } from 'node:path'
 import { gunzipSync } from 'node:zlib'
 import { fieldSeasons, scoreContext } from '../src/engine/card'
@@ -41,6 +41,11 @@ function main() {
     return cells.get(id) ?? null
   }
   const scores: Record<string, { rh: number; dr: number }> = {}
+  // large builds (the USA): stream one TSV line per field instead of holding all of them in memory
+  const tsv = dst.endsWith('.tsv') ? openSync(dst, 'w') : null
+  const TAB = String.fromCharCode(9)
+  const NL = String.fromCharCode(10)
+  if (tsv !== null) writeSync(tsv, ['id', 'rh', 'dr'].join(TAB) + NL)
   const files = readdirSync(join(outDir, 'fields')).filter((f) => /\.json(\.gz)?$/.test(f))
   let n = 0
   let withRh = 0
@@ -59,11 +64,14 @@ function main() {
         }
       }
       if (rh >= 0) withRh++
-      scores[field.id] = { rh, dr: drought.get(field.cell) ?? -1 }
+      const dr = drought.get(field.cell) ?? -1
+      if (tsv !== null) writeSync(tsv, [field.id, rh, dr].join(TAB) + NL)
+      else scores[field.id] = { rh, dr }
       n++
     }
   }
-  writeFileSync(dst, JSON.stringify(scores))
+  if (tsv !== null) closeSync(tsv)
+  else writeFileSync(dst, JSON.stringify(scores))
   const dr = [...drought.values()].filter((v) => v >= 0)
   console.log(JSON.stringify({ fields: n, withRotationHealth: withRh, cells: cells.size, droughtRange: dr.length ? [Math.min(...dr), Math.max(...dr)] : null, seconds: Math.round((Date.now() - t0) / 1000) }))
 }
