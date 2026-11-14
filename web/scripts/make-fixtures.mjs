@@ -68,7 +68,7 @@ for (let y = 1991; y <= 2026; y++) {
   const firstAutumn = 285 + Math.round(rnd() * 25 + warm * 3)
   years.push({
     y, gdd5: gdd(5), gdd10: gdd(10), lastSpringFrostDoy: lastSpring, firstAutumnFrostDoy: firstAutumn,
-    heavyRainDays: Math.round(rnd() * 6), rain, et0, hot30, hot35, tmin, wet,
+    heavyRainDays: Math.round(rnd() * 6), tmean: tmean.map((t) => round(t)), rain, et0, hot30, hot35, tmin, wet,
   })
 }
 writeFileSync(join(out, `climate_${CELL}.json`), JSON.stringify({ v: 1, id: CELL, lat: 49.5, lon: 31.875, years }))

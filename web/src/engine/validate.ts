@@ -9,6 +9,8 @@ type Obj = Record<string, unknown>
 const isObj = (x: unknown): x is Obj => typeof x === 'object' && x !== null && !Array.isArray(x)
 const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x)
 const isNumArr = (x: unknown, len?: number) => Array.isArray(x) && x.every(isNum) && (len === undefined || x.length === len)
+// climate dekads may be null where POWER has no data yet (the current, unfinished year)
+const isDekads = (x: unknown) => Array.isArray(x) && x.length === 36 && x.every((v) => v === null || isNum(v))
 
 export function fieldChunkErrors(x: unknown): string[] {
   const e: string[] = []
@@ -47,7 +49,7 @@ export function climateCellErrors(x: unknown): string[] {
     if (!isObj(y) || !isNum(y.y)) return e.push(at)
     for (const k of ['gdd5', 'gdd10', 'heavyRainDays']) if (!isNum(y[k])) e.push(`${at}.${k}`)
     for (const k of ['lastSpringFrostDoy', 'firstAutumnFrostDoy']) if (y[k] !== null && !isNum(y[k])) e.push(`${at}.${k}`)
-    for (const k of ['rain', 'et0', 'hot30', 'hot35', 'tmin', 'wet']) if (!isNumArr(y[k], 36)) e.push(`${at}.${k}`)
+    for (const k of ['tmean', 'rain', 'et0', 'hot30', 'hot35', 'tmin', 'wet']) if (!isDekads(y[k])) e.push(`${at}.${k}`)
   })
   return e
 }

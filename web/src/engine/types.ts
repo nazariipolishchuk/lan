@@ -54,6 +54,9 @@ export interface CurveChunk {
   curves: Record<string, string>
 }
 
+/** 36 dekadal values; null where the source has no data (for example the unfinished current year). */
+export type Dekads = (number | null)[]
+
 export interface YearIndicators {
   y: number
   gdd5: number
@@ -61,13 +64,14 @@ export interface YearIndicators {
   lastSpringFrostDoy: number | null
   firstAutumnFrostDoy: number | null
   heavyRainDays: number
-  // 36 dekads each
-  rain: number[]
-  et0: number[]
-  hot30: number[]
-  hot35: number[]
-  tmin: number[]
-  wet: number[]
+  // 36 dekads each (tmean added in P1: needed for climate-derived sowing calendars)
+  tmean: Dekads
+  rain: Dekads
+  et0: Dekads
+  hot30: Dekads
+  hot35: Dekads
+  tmin: Dekads
+  wet: Dekads
 }
 
 export interface ClimateCell {
