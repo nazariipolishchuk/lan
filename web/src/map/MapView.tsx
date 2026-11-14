@@ -47,17 +47,37 @@ export function MapView() {
     setZoom(m.getZoom())
     m.on('zoom', () => setZoom(m.getZoom()))
     m.on('style.load', () => addFields(m, useStore.getState().theme))
-    m.on('mousemove', 'fields-fill', (e) => {
-      const f = e.features?.[0] as MapGeoJSONFeature | undefined
-      if (!f) return
-      setHover(m, hovered, String(f.properties.id))
-      m.getCanvas().style.cursor = 'pointer'
-      setTip({ x: e.point.x, y: e.point.y, ha: Number(f.properties.ha) })
-    })
-    m.on('mouseleave', 'fields-fill', () => {
+    // Hover: one query per animation frame, painted through feature-state (no layer rebuild), and only at
+    // zooms where fields are drawn. setFilter per hovered field re-parsed every tile and left a lagging trail.
+    let pending: maplibregl.MapMouseEvent | null = null
+    let frame = 0
+    const clearHover = () => {
       setHover(m, hovered, null)
       m.getCanvas().style.cursor = ''
       setTip(null)
+    }
+    const onMove = () => {
+      frame = 0
+      const e = pending
+      pending = null
+      if (!e || !m.getLayer('fields-fill') || m.getZoom() < FIELDS_MIN_ZOOM) return clearHover()
+      const f = m.queryRenderedFeatures(e.point, { layers: ['fields-fill'] })[0] as MapGeoJSONFeature | undefined
+      if (!f) return clearHover()
+      setHover(m, hovered, String(f.properties.id))
+      m.getCanvas().style.cursor = 'pointer'
+      setTip({ x: e.point.x, y: e.point.y, ha: Number(f.properties.ha) })
+    }
+    m.on('mousemove', (e) => {
+      pending = e
+      if (!frame) frame = requestAnimationFrame(onMove)
+    })
+    m.getCanvas().addEventListener('mouseleave', clearHover)
+    m.on('zoom', () => {
+      if (m.getZoom() < FIELDS_MIN_ZOOM && hovered.current) clearHover()
+    })
+    m.on('movestart', () => setTip(null))
+    m.on('style.load', () => {
+      hovered.current = null // feature state does not survive a style swap
     })
     m.on('click', (e) => {
       const f = m.queryRenderedFeatures(e.point, { layers: ['fields-fill'] })[0]
@@ -100,8 +120,13 @@ export function MapView() {
 
 function setHover(m: maplibregl.Map, ref: { current: string | null }, id: string | null) {
   if (ref.current === id) return
+  if (!m.getSource('fields')) {
+    ref.current = null
+    return
+  }
+  if (ref.current) m.setFeatureState({ source: 'fields', sourceLayer: 'fields', id: ref.current }, { hover: false })
   ref.current = id
-  if (m.getLayer('fields-hover')) m.setFilter('fields-hover', ['==', ['get', 'id'], id ?? ''])
+  if (id) m.setFeatureState({ source: 'fields', sourceLayer: 'fields', id }, { hover: true })
 }
 
 function addFields(m: maplibregl.Map, theme: Theme) {
@@ -109,6 +134,7 @@ function addFields(m: maplibregl.Map, theme: Theme) {
   if (m.getSource('fields')) return
   m.addSource('fields', {
     type: 'vector', url: `pmtiles://${new URL(FIELD_TILES, window.location.href).href}`,
+    promoteId: 'id', // our string field id becomes the feature id, so hover can use feature-state
     attribution: 'Fields of The World (CC-BY-4.0)',
   })
   const before = 'places'
@@ -121,8 +147,8 @@ function addFields(m: maplibregl.Map, theme: Theme) {
     paint: { 'line-color': p.field, 'line-opacity': ['interpolate', ['linear'], ['zoom'], FIELDS_MIN_ZOOM, 0.35, 14, 0.8], 'line-width': ['interpolate', ['linear'], ['zoom'], 11, 0.4, 15, 1.4] },
   }, before)
   m.addLayer({
-    id: 'fields-hover', type: 'line', source: 'fields', 'source-layer': 'fields', filter: ['==', ['get', 'id'], ''],
-    paint: { 'line-color': p.hover, 'line-width': 2 },
+    id: 'fields-hover', type: 'line', source: 'fields', 'source-layer': 'fields', minzoom: FIELDS_MIN_ZOOM,
+    paint: { 'line-color': p.hover, 'line-width': 2, 'line-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 1, 0] },
   }, before)
   m.addLayer({
     id: 'fields-selected', type: 'line', source: 'fields', 'source-layer': 'fields',
