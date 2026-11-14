@@ -37,7 +37,7 @@ Times are Europe/Kyiv.
 | GeoNames | `download.geonames.org/export/dump/UA.zip` → 200, 2.4 MB; CC-BY-4.0 |
 | Admin boundaries | geoBoundaries gbOpen UKR ADM1: 27 units (includes Crimea and Sevastopol), source OSM/Wambacher 2017, ODbL 1.0 |
 | Basemap | EOX Sentinel-2 cloudless 2024 WMTS tile → 200, CORS reflects the origin. Licence of 2018+ editions is CC BY-NC-SA 4.0 (non-commercial; fine for the hackathon), attribution "Sentinel-2 cloudless by EOX IT Services GmbH (contains modified Copernicus Sentinel data)" |
-| Terms and Conditions | **Not read yet.** spaceappschallenge.org serves an incomplete certificate chain: Python and WebFetch fail; to be read in Chrome |
+| Terms and Conditions | Read in Chrome (2026 Participant T&C, updated 7 Aug 2026). (1) Our original content must be freely available or under an OSI licence; if none is named NASA uses Apache-2.0 → **we pick MIT** (O10). (2) Non-NASA materials must be "freely and publicly available without restriction" or OSI-licensed, each licence listed in our documentation; every source must be cited, or awards can be removed. (3) No PII, no recognisable names, voices or likenesses of people under 18; adults shown must agree to NASA's use. (4) Video: our own work, no third-party copyrighted elements; US government gets a perpetual licence to it. (5) No material that promotes commercial services or products |
 | SMAP order (0.7) | Not placed yet; moved to P1 |
 
 ## Forks and cuts
@@ -52,4 +52,6 @@ Times are Europe/Kyiv.
 | Sat 11:00 | Fields are stored as 16 parquet parts in `work/fields/`, built in subprocesses; readers go row group by row group; zonal statistics touch only field pixels | The VPS has 1.9 GiB RAM; three earlier attempts were killed by the OOM killer at 1.75 GB |
 | Sat 11:00 | Fields ≥ 1 ha in Ukraine (FTW 2025): 598,088, ≈ 31 M ha (Ukraine's arable land ≈ 32.7 M ha); Cherkasy 29,214 fields, 1.24 M ha | Measured |
 | Sat 11:15 | HLS memory: per-scene arrays freed early, interior labels only (full labels just for fields without an interior), `MALLOC_ARENA_MAX=2`, `MALLOC_MMAP_THRESHOLD_=1048576`, `GDAL_CACHEMAX=64`; child processes get `< /dev/null` so they cannot eat the tile list. Peak on T36UUV: 1.66 GB → 1.42 GB. A crashed tile is retried with 2 workers | VPS has 1.9 GiB |
+| Sat 11:30 | **Basemap: NASA GIBS imagery (public domain) instead of EOX Sentinel-2 cloudless 2018+**, which is CC BY-NC-SA (non-commercial = a restriction under the T&C third-party rule). EOX's 2016 edition (CC-BY-4.0) is the fallback | T&C "Use of third-party materials" |
+| Sat 11:30 | Night run approved by N ("yes, maybe even earlier"): tiles 41–90 queued in tmux `hls2`, start as soon as tiles 1–40 finish | N, 11:25 |
 | Sat 11:20 | HLS budget: a full run averages **17.5 MB per scene** (454 MB / 26 scenes on T36UVV; the 5.6 MB probe was a partial-coverage scene). 990 tile-seasons × ≈ 450 MB ≈ 450 GB of traffic, inside the 3 TiB monthly allowance; nothing large stays on disk | Measured in the G2 run |
