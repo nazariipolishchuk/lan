@@ -65,3 +65,15 @@ describe('field card on fixtures', () => {
     expect(m.risks?.results.length).toBeGreaterThan(0)
   })
 })
+
+describe('emerged winter crop in the card', () => {
+  it('counts the locked season as a winter season, not a gap', () => {
+    const f = { id: 'x', c: [32, 49.4] as [number, number], ha: 50, adm: { oblast: 'Cherkasy', raion: '' }, cell: 't',
+      soil: null, terrain: null, hist: [], now: { state: 'winter_crop' as const, asOf: '2026-10-25' }, bareDays: null, flags: [] }
+    const card = buildCard(f, syntheticCell(1990, 2026), CROPS, RULES, new Date(2026, 10, 14))
+    expect(card.target).toBe(2028)
+    expect(card.seasons.find((s) => s.y === 2027)).toMatchObject({ known: false, group: 'winter' })
+    // a spring crop cannot have been the winter crop that is up; for winter candidates 2027 stays unknown
+    for (const c of card.sowNext) if (c.crop.type === 'spring') for (const k of c.checks) expect(k.unknownYears ?? []).not.toContain(2027)
+  })
+})

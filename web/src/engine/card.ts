@@ -45,6 +45,11 @@ export function buildCard(field: FieldRecord, cell: ClimateCell, crops: CropsFil
   const open = slots.find((s) => !s.locked)!
   const target = open.y
   const seasons = histToSeasons(field.hist, HISTORY_FROM, target - 1)
+  // an emerged winter crop is a known winter season, not a gap (the farmer confirms which crop)
+  for (const sl of slots) {
+    const s = sl.locked ? seasons.find((x) => x.y === sl.y) : undefined
+    if (s && !s.known) s.group = 'winter'
+  }
   const prev = [...seasons].reverse().find((s) => s.y === target - 1)
   const ctx = { crops, rules, cell }
   const sctx: ScoreContext = { crops, rules, cell, field, today }

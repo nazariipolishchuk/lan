@@ -91,6 +91,7 @@ export function checkRepeat(seasons: Season[], crop: CropDef, year: number): Rul
   if (!max) return { status: 'ok', rule: 'MAX_IN_ROW', source }
   for (let i = 1; i <= max; i++) {
     const s = seasonAt(seasons, year - i)
+    if (s && !s.known && groupExcludes(s.group, crop.type)) return { status: 'ok', rule: 'MAX_IN_ROW', source }
     if (!s || !s.known) return { status: i === 1 ? 'ok' : 'unknown', rule: 'MAX_IN_ROW', unknownYears: [year - i], source }
     if (s.crop !== crop.id) return { status: 'ok', rule: 'MAX_IN_ROW', source }
   }
