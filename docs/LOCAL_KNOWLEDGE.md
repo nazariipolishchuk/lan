@@ -72,3 +72,6 @@ misclassified.
   (peas, chickpea, sorghum) stay available under "Other options" and in the Drought-proof plan. N: give
   people the choice with how well each crop is likely to do and let them pick. The score is a 0–100 season
   score from water, heat, soil and disease, not a yield forecast, and is labelled so.
+- **Cover crops (14 Nov, after the layout review):** N says cover crops between a cereal harvest and a
+  spring sowing are usually not sown nearby. The app keeps showing the free window as a cover-crop
+  opportunity (it scores soil protection), but names no species and says it is not common practice here.

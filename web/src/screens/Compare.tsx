@@ -249,10 +249,12 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
     const prev = box(p.sl.y - 1)
     return prev ? { y: p.sl.y, from: prev.to + 3, to: box(p.sl.y).from - 3 } : null
   }).filter((c): c is { y: number; from: number; to: number } => !!c && c.to - c.from > 6)
+  // months between the harvest and the next sowing, for the cover-crop note
+  const coverNote = (c: { from: number; to: number }) => t('cmp.coverNote', { m: Math.max(1, Math.round((c.to - c.from + 6) / scale.dk / 3)) })
 
-  const chips: { key: string; good: boolean; text: string; combo?: ComboHit; yrs?: string }[] = []
+  const chips: { key: string; good: boolean; text: string; combo?: ComboHit; yrs?: string; note?: string }[] = []
   for (const l of score?.links ?? []) for (const c of l.combos) chips.push({ key: `${l.from}-${c.id}`, good: c.sign > 0, text: t(c.label as Key), combo: c, yrs: `${l.from}→${l.to}` })
-  for (const c of covers) chips.push({ key: `cover-${c.y}`, good: true, text: `${t('combo.cover_shield')}`, yrs: `${c.y}` })
+  for (const c of covers) chips.push({ key: `cover-${c.y}`, good: true, text: `${t('combo.cover_shield')}`, yrs: `${c.y}`, note: coverNote(c) })
   const comboCount = chips.filter((c) => c.good).length
   const open1 = chips.find((c) => c.key === chip)
 
@@ -276,7 +278,7 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
             return (
               <li key={p.sl.y}>
                 {i > 0 && <span className="chain-link" data-tone={lk?.tone ?? 'none'} aria-hidden="true">{lk?.tone === 'good' ? '✔' : lk?.tone === 'bad' ? '✖' : '→'}</span>}
-                {p.sl.cover && <span className="chain-cover" title={t('cmp.cover')} aria-label={t('cmp.cover')}>🌱</span>}
+                {p.sl.cover && <span className="chain-cover" title={t('cmp.cover')} aria-label={t('cmp.cover')}>🌱 {t('cmp.coverShort')}</span>}
                 <button type="button" className="chain-item" data-hard={!!p.ts?.hard} style={{ ['--c' as string]: p.c.colour }} onClick={() => onTile(p.c.id, p.sl.y)}>
                   <small>{p.sl.y}</small> <span aria-hidden="true">{p.sl.locked ? '📌' : ICON[p.c.icon]}</span> {short(p.c.id)}{p.ts?.hard ? ' ✖' : ''}
                 </button>
@@ -306,8 +308,9 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
               )
             })}
             {covers.map((c) => (
-              <span key={`c${c.y}`} className="ccover" style={{ left: c.from, width: c.to - c.from }} title={t('cmp.cover')}>
-                <span className="sr-only">{t('cmp.cover')}</span>
+              <span key={`c${c.y}`} className="ccover" style={{ left: c.from, width: c.to - c.from }} title={coverNote(c)}>
+                {c.to - c.from >= 84 ? <span className="ccover-label" aria-hidden="true">🌱 {t('cmp.coverShort')}</span> : null}
+                <span className="sr-only">{coverNote(c)}</span>
               </span>
             ))}
             {planTiles.map((p) => {
@@ -345,7 +348,7 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
         )}
         {open1 && (
           <p className="chip-detail" role="status">
-            {open1.combo ? <>{open1.combo.sign > 0 ? '+' : '−'}{open1.combo.points} · {source(open1.combo.source)}</> : t('cmp.cover')}
+            {open1.combo ? <>{open1.combo.sign > 0 ? '+' : '−'}{open1.combo.points} · {source(open1.combo.source)}</> : open1.note}
           </p>
         )}
         {children}

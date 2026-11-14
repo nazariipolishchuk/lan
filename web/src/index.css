@@ -228,7 +228,8 @@ button.ctile:hover, button.ctile:focus-visible { outline: 2px solid var(--gold);
 .ctile[data-hard="true"] { box-shadow: inset 0 0 0 2px var(--stop), inset 0 -4px 0 var(--c); }
 .ctile[data-assumed="true"] { background: none; border: 1px dashed var(--c); }
 .ctile-bad { flex: none; margin-left: auto; color: var(--stop); font-weight: 700; }
-.ccover { position: absolute; top: 12px; height: 12px; border-radius: 6px; background: repeating-linear-gradient(135deg, var(--go) 0 4px, color-mix(in srgb, var(--go) 40%, transparent) 4px 8px); }
+.ccover-label { position: absolute; left: 50%; top: -15px; transform: translateX(-50%); font-size: 11px; line-height: 14px; color: var(--go); white-space: nowrap; }
+.ccover { position: absolute; top: 20px; height: 12px; border-radius: 6px; background: repeating-linear-gradient(135deg, var(--go) 0 4px, color-mix(in srgb, var(--go) 40%, transparent) 4px 8px); }
 .lmark { position: absolute; top: 1px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; line-height: 1; background: var(--line); color: var(--panel); font-weight: 700; }
 .lmark[data-tone="good"] { background: var(--go); }
 .lmark[data-tone="bad"] { background: var(--stop); }
