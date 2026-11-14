@@ -8,7 +8,7 @@ import { explain } from './explain'
 import { chunkOfId } from './fieldId'
 import { histToSeasons } from './precursors'
 import { suggestRotations } from './strategies'
-import { CROPS, RULES } from './testkit'
+import { CROPS, RULES, readChunk } from './testkit'
 import type { ClimateCell, FieldChunk } from './types'
 
 const here = fileURLToPath(new URL('.', import.meta.url))
@@ -19,7 +19,7 @@ const SHOWCASE = ['894u6cj46a', '8bohkcn1oa', '89e3pcioxe']
 
 function load(id: string) {
   const ck = chunkOfId(id)!
-  const chunk = JSON.parse(readFileSync(join(data, 'fields', `${ck}.json`), 'utf8')) as FieldChunk
+  const chunk = readChunk<FieldChunk>(join(data, 'fields', ck))
   const field = chunk.fields.find((f) => f.id === id)!
   const cell = JSON.parse(readFileSync(join(data, 'climate', `${field.cell}.json`), 'utf8')) as ClimateCell
   return { field, cell }

@@ -10,6 +10,7 @@ import { cropCalendar, dekadOf, sowingOpen } from '../engine/calendar'
 import type { CardModel } from '../engine/card'
 import type { ComboHit } from '../engine/combos'
 import { pairCombos } from '../engine/combos'
+import { Info } from './Info'
 import { explain, type Explanation } from '../engine/explain'
 import { blockReason } from '../engine/prefs'
 import { checkRepeat, checkReturn, type Season } from '../engine/precursors'
@@ -115,7 +116,7 @@ function CompareBody({ data }: { data: Loaded }) {
       <header className="cmp-head">
         <div className="cmp-titlerow">
           <button type="button" className="back-btn" onClick={() => setCompare(false)} aria-label={t('cmp.back')}>←</button>
-          <h2 className="cmp-title">{t('cmp.title')} <span className="muted">· {nf(field.ha)} {t('card.ha')}</span></h2>
+          <h2 className="cmp-title">{t('cmp.title')} <span className="muted">· {nf(field.ha)} {t('card.ha')}</span> <Info k="info.compare" /></h2>
         </div>
         <div className="cmp-controls">
           <ScenarioSwitch cell={cell} />
@@ -124,7 +125,7 @@ function CompareBody({ data }: { data: Loaded }) {
         <p className="muted small cmp-note">{t('cmp.scaleNote')}</p>
       </header>
       {unsafe ? <p className="note">{t('card.unsafeNote')}</p> : avail > 0 && (
-        <div className="lanes">
+        <div className="lanes" data-tour="lanes">
           {strategies.map((s) => (
             <Lane key={s.id} lane={s.id} score={s.score} strategy={s} history={history} past={past} data={data} scale={scale}
               onTile={(crop, year) => setDetail({ crop, year })} />
@@ -265,9 +266,9 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
   }, [open, score, strategy, field, history])
 
   return (
-    <article className="lane" data-lane={lane}>
+    <article className="lane" data-lane={lane} data-tour={`lane-${lane}`}>
       <header className="lane-head">
-        <h3 className="lane-name">{t(`cmp.lane.${lane}` as Key)} <span className="lane-sub">{t(`cmp.lane.${lane}.sub` as Key)}</span></h3>
+        <h3 className="lane-name">{t(`cmp.lane.${lane}` as Key)} <span className="lane-sub">{t(`cmp.lane.${lane}.sub` as Key)}</span> <Info k={`info.lane.${lane}` as Key} /></h3>
         {score && <span className="lane-score" aria-label={`${t('cmp.score')} ${Math.round(score.total)}`}><small>{t('cmp.score')}</small><b>{Math.round(score.total)}</b></span>}
       </header>
 
@@ -337,7 +338,7 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
 
       <div className="lane-body">
         {chips.length > 0 && (
-          <div className="chips">
+          <div className="chips" data-tour={`combos-${lane}`}>
             {chips.map((c) => (
               <button key={c.key} type="button" className="chip" data-good={c.good} aria-pressed={chip === c.key} onClick={() => setChip(chip === c.key ? null : c.key)}>
                 <span aria-hidden="true">{c.good ? '✔' : '✖'}</span> {c.text} <small>{c.yrs}</small>
@@ -383,7 +384,7 @@ function MyPicker({ mine, data, history, fillFrom }: { mine: MyPlan; data: Loade
   const firstOpen = mine.slots.find((s) => !s.locked)?.y
   const chosen = mine.slots.filter((s) => s.value?.crop).map((s) => ({ y: s.y, crop: s.value!.crop! }))
   return (
-    <div className="mypick">
+    <div className="mypick" data-tour="myplan">
       <div className="mypick-grid">
         {mine.slots.map((s) => {
           if (s.locked) {

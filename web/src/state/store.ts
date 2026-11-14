@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Scenario } from '../engine/score'
 import type { CropId } from '../engine/types'
 import type { Lang } from '../i18n'
+import type { MapLayer } from '../map/layers'
 import type { Theme } from '../map/style'
 import { UserStore, browserStorage, type UserData } from './persist'
 
@@ -30,6 +31,10 @@ interface State {
   dateOverridden: boolean
   scenario: Scenario
   user: UserData
+  /** Active map layer (PLAN 4.2) */
+  mapLayer: MapLayer
+  /** A place the map should fly to (search result or "locate me"); the map clears it after flying. */
+  flyTo: { lon: number; lat: number; zoom: number } | null
   /** False when browser storage is unavailable: inputs last for this visit only (state E6). */
   storageOk: boolean
   setLang: (l: Lang) => void
@@ -42,6 +47,8 @@ interface State {
   /** null = back to the real today */
   setToday: (iso: string | null) => void
   updateUser: (fn: (d: UserData) => UserData) => void
+  setMapLayer: (l: MapLayer) => void
+  setFlyTo: (t: State['flyTo']) => void
 }
 
 const HASH = /^#\/f\/([0-9a-z]{10}|fixture-[A-C])(\/compare)?/
@@ -94,6 +101,8 @@ export const useStore = create<State>((set, get) => ({
   panel: { kind: 'card' },
   sheet: 'half',
   scenario: 'all',
+  mapLayer: 'none',
+  flyTo: null,
   user: userStore.data,
   storageOk: userStore.ok,
   setLang: (lang) => {
@@ -132,6 +141,8 @@ export const useStore = create<State>((set, get) => ({
     writeUrl(get().selectedId, get().compare, d ? iso : null)
     set({ today: d ?? new Date(), dateOverridden: !!d })
   },
+  setMapLayer: (mapLayer) => set({ mapLayer }),
+  setFlyTo: (flyTo) => set({ flyTo }),
   updateUser: (fn) => {
     const next = userStore.save(fn(get().user))
     set({ user: next, storageOk: userStore.ok })

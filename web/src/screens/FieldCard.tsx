@@ -9,6 +9,7 @@ import { useCard, useFieldData, type Loaded } from './common'
 import { CropDetail } from './CropDetail'
 import { Evidence } from './Evidence'
 import { HistoryEditor } from './HistoryEditor'
+import { Info } from './Info'
 import { Priorities } from './Priorities'
 
 const TAB_OF: Record<HazardDef['variable'], EvidenceTab> = {
@@ -136,8 +137,8 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
         <span className="badge">{t('card.estimate')}</span>
       </header>
 
-      <section className="row" aria-labelledby="was">
-        <h3 id="was" className="row-label">{t('card.was')}
+      <section className="row" aria-labelledby="was" data-tour="history">
+        <h3 id="was" className="row-label">{t('card.was')} <Info k="info.was" />
           <button type="button" className="mini-btn" onClick={() => openPanel({ kind: 'history' })}>{t('card.edit')}</button>
         </h3>
         {field.hist.length || model.seasons.some((s) => s.farmer) ? (
@@ -170,15 +171,15 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
       </section>
 
       <section className="row">
-        <h3 className="row-label">{t('card.now')}</h3>
+        <h3 className="row-label">{t('card.now')} <Info k="info.now" /></h3>
         <p>{field.now ? t(`now.${field.now.state}` as Key, { date: fmtDate(field.now.asOf) }) : t('now.unknown')}</p>
       </section>
       {locked && <p className="note">{t('card.lockedWinter', { year: locked.y })}</p>}
       {field.flags.includes('small') && <p className="note">{t('card.smallField')}</p>}
 
       {unsafe ? <p className="note warn-note">{t('card.unsafeNote')}</p> : <>
-      <section className="block" data-tone="go" aria-labelledby="sow">
-        <h3 id="sow" className="block-title"><span aria-hidden="true">✓</span> {t('card.sowNext')} <span className="muted">{t('card.sowFor', { year: model.target })}</span></h3>
+      <section className="block" data-tone="go" aria-labelledby="sow" data-tour="sow">
+        <h3 id="sow" className="block-title"><span aria-hidden="true">✓</span> {t('card.sowNext')} <span className="muted">{t('card.sowFor', { year: model.target })}</span> <Info k="info.sow" /></h3>
         <p className="muted small">{t('card.chooseHint')}</p>
         <ul className="picks">
           {(showAll ? [...model.sowNext, ...model.other] : model.sowNext).map((c) => (
@@ -214,8 +215,8 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
         )}
       </section>
 
-      <section className="block" data-tone="stop" aria-labelledby="avoid">
-        <h3 id="avoid" className="block-title"><span aria-hidden="true">⛔</span> {t('card.avoid')}</h3>
+      <section className="block" data-tone="stop" aria-labelledby="avoid" data-tour="avoid">
+        <h3 id="avoid" className="block-title"><span aria-hidden="true">⛔</span> {t('card.avoid')} <Info k="info.avoid" /></h3>
         {model.avoid.length ? (
           <ul className="lines">
             {model.avoid.map((a) => (
@@ -230,8 +231,8 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
       </section>
 
       {model.risks && (
-        <section className="block" data-tone="warn" aria-labelledby="risks">
-          <h3 id="risks" className="block-title"><span aria-hidden="true">⚠</span> {t('card.risks')} <span className="muted">· {cropName(model.risks.crop)}</span></h3>
+        <section className="block" data-tone="warn" aria-labelledby="risks" data-tour="risks">
+          <h3 id="risks" className="block-title"><span aria-hidden="true">⚠</span> {t('card.risks')} <span className="muted">· {cropName(model.risks.crop)}</span> <Info k="info.risks" /></h3>
           {(() => {
             const hits = model.risks.results.filter((r) => r.count > 0).sort((a, b) => b.count - a.count)
             const years = model.risks.results[0]?.years ?? 0
@@ -255,7 +256,7 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
 
       {model.watch.length > 0 && (
         <section className="block" data-tone="watch" aria-labelledby="watch">
-          <h3 id="watch" className="block-title"><span aria-hidden="true">◉</span> {t('card.watch')} <span className="muted">· {cropName(model.watch[0].crop)}</span></h3>
+          <h3 id="watch" className="block-title"><span aria-hidden="true">◉</span> {t('card.watch')} <span className="muted">· {cropName(model.watch[0].crop)}</span> <Info k="info.watch" /></h3>
           <ul className="lines">
             {model.watch.map((w) => (
               <li key={w.what}><button type="button" className="linklike" onClick={() => openPanel({ kind: 'crop', crop: w.crop.id, year: model.target })}><span className="when">{t('card.watchRange', { from: fmtDay(w.from), to: fmtDay(w.to) })}</span> {t(w.what as Key)}</button></li>
@@ -267,7 +268,7 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
       </>}
 
       <div className="actions">
-        {!unsafe && <button type="button" className="btn primary" onClick={() => setCompare(true)}>{t('card.compare')}</button>}
+        {!unsafe && <button type="button" className="btn primary" data-tour="compare-btn" onClick={() => setCompare(true)}>{t('card.compare')}</button>}
         <button type="button" className="btn ghost" onClick={() => openPanel({ kind: 'evidence' })}>{t('card.why')}</button>
         <button type="button" className="btn ghost" onClick={() => openPanel({ kind: 'priorities' })}>{t('card.priorities')}</button>
       </div>
@@ -275,7 +276,7 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
       <section className="row health" aria-label={t('card.health')}>
         {model.health >= 0 ? (
           <>
-            <h3 className="row-label">{t('card.health')}</h3>
+            <h3 className="row-label">{t('card.health')} <Info k="info.health" /></h3>
             <meter min={0} max={100} low={40} high={70} optimum={100} value={model.health} aria-label={t('card.health')} />
             <span className="health-num">{model.health}</span>
           </>

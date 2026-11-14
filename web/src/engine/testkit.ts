@@ -1,5 +1,7 @@
 // Synthetic inputs for engine tests. Temperatures follow a smooth Forest-Steppe-like curve:
 // tmean(d) = 8 + 13·sin(2π(d − 9.5)/36): −5 °C in early January, 21 °C in early July.
+import { existsSync, readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
 import crops from '../../public/rules/crops.json'
 import rules from '../../public/rules/rules.json'
 import type { ClimateCell, CropDef, CropId, CropsFile, FieldRecord, RulesFile, YearIndicators } from './types'
@@ -28,4 +30,10 @@ export function field(over: Partial<FieldRecord> = {}): FieldRecord {
     id: 'f', c: [32, 49.4], ha: 50, adm: { oblast: 'Cherkasy', raion: '' }, cell: 'test',
     soil: null, terrain: null, hist: [], now: null, bareDays: null, flags: [], ...over,
   }
+}
+
+/** Read a data chunk the way the app does: `{base}.json.gz` first (P4), then plain `{base}.json`. */
+export function readChunk<T>(base: string): T {
+  if (existsSync(`${base}.json.gz`)) return JSON.parse(gunzipSync(readFileSync(`${base}.json.gz`)).toString('utf8')) as T
+  return JSON.parse(readFileSync(`${base}.json`, 'utf8')) as T
 }

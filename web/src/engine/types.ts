@@ -90,21 +90,57 @@ export interface SourceRef {
   licence: string
 }
 
+/** Measured accuracy of one model (pipeline evaluate()); confusion rows = true class, columns = predicted. */
+export interface ModelAccuracy {
+  macroF1: number
+  accuracy?: number
+  perClass: Record<string, number>
+  n: number
+  labelSource?: string
+  testTiles?: string[]
+  confusion?: number[][]
+  labels?: string[]
+}
+
+/** Out-of-region check of the group model: one held-out tile per oblast outside the training area. */
+export interface RegionAccuracy extends ModelAccuracy {
+  oblast: string
+  zone: string
+  tile: string
+  fields: number
+}
+
+/** One oblast's field tiles and counts (added with the all-Ukraine build, P4; absent in older data). */
+export interface MetaOblast {
+  name: string
+  fields: number
+  withHistory: number
+  bbox: [number, number, number, number]
+  tiles: string
+}
+
 export interface Meta {
   v: 1
   built: string
   coverage: { historyTiles: string[]; climateOnly: boolean }
-  accuracy: { macroF1: number; perClass: Record<string, number>; n: number; labelSource: string } | null
+  accuracy: (ModelAccuracy & { labelSource: string; crop?: ModelAccuracy; ukraine?: Record<string, RegionAccuracy> }) | null
   sources: SourceRef[]
+  oblasts?: Record<string, MetaOblast>
 }
 
-/** Vector tile feature properties. `k` last crop code, `rh` rotation health 0..100 (−1 unknown), `f` flag bits. */
+/**
+ * Vector tile feature properties. `k` last confident crop code, `lg` group of the latest season
+ * (0 winter, 1 summer, 2 uncultivated, −1 unknown), `rh` rotation health 0..100, `dr` drought years of the
+ * last 20 (−1 unknown), `f` flag bits. `lg` and `dr` arrived with P4; older tiles lack them.
+ */
 export interface TileProps {
   id: string
   ck: string
   ha: number
   k: number
+  lg?: number
   rh: number
+  dr?: number
   f: number
 }
 
