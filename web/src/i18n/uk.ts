@@ -203,4 +203,7 @@ export const uk: Record<Key, string> = {
   'pr.note': 'Зміни одразу перераховують картку й порівняння. Діють для всіх полів і зберігаються в цьому браузері.',
   'pr.less': 'менше', 'pr.more': 'більше',
   'src.kmu164': 'Постанова КМУ № 164 (2010)', 'src.local_n': 'Місцева практика, Черкащина (експерт команди)',
+  'crop.short.w_wheat': 'Пшениця оз.', 'crop.short.w_barley': 'Ячмінь оз.', 'crop.short.s_barley': 'Ячмінь яр.', 'crop.short.maize': 'Кукурудза',
+  'crop.short.sunflower': 'Соняшник', 'crop.short.soy': 'Соя', 'crop.short.sugar_beet': 'Буряк', 'crop.short.w_rape': 'Ріпак',
+  'crop.short.peas': 'Горох', 'crop.short.chickpea': 'Нут', 'crop.short.sorghum': 'Сорго', 'crop.short.fallow': 'Пар', 'crop.short.cover': 'Покривна',
 }

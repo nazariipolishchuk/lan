@@ -202,6 +202,9 @@ export const en = {
   'pr.note': 'Changes re-score the card and the comparison at once. They apply to every field and stay in this browser.',
   'pr.less': 'less', 'pr.more': 'more',
   'src.kmu164': 'Cabinet of Ministers Resolution No. 164 (2010)', 'src.local_n': 'Local practice, Cherkasy oblast (team expert)',
+  'crop.short.w_wheat': 'W. wheat', 'crop.short.w_barley': 'W. barley', 'crop.short.s_barley': 'S. barley', 'crop.short.maize': 'Maize',
+  'crop.short.sunflower': 'Sunflower', 'crop.short.soy': 'Soy', 'crop.short.sugar_beet': 'Sugar beet', 'crop.short.w_rape': 'Rapeseed',
+  'crop.short.peas': 'Peas', 'crop.short.chickpea': 'Chickpea', 'crop.short.sorghum': 'Sorghum', 'crop.short.fallow': 'Fallow', 'crop.short.cover': 'Cover',
 } as const
 
 export type Key = keyof typeof en
