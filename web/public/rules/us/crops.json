@@ -1,0 +1,1126 @@
+{
+ "v": 1,
+ "crops": [
+  {
+   "id": "w_wheat",
+   "name": {
+    "en": "Winter wheat",
+    "uk": "Пшениця озима"
+   },
+   "icon": "wheat",
+   "colour": "#d9a441",
+   "family": "poaceae",
+   "type": "winter",
+   "sowing": {
+    "tempC": {
+     "v": 15,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 3,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 29,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 2,
+    "source": null
+   },
+   "gdd": null,
+   "water": "medium",
+   "rooting": "medium",
+   "fixesNitrogen": false,
+   "residue": "high",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "wheat_grainfill_heat",
+     "window": {
+      "from": "harvest",
+      "start": -4,
+      "end": -1
+     },
+     "variable": "hot30",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 8,
+      "source": null
+     },
+     "label": "hz.grainfill_heat"
+    },
+    {
+     "id": "wheat_autumn_dry",
+     "window": {
+      "from": "sow",
+      "start": -1,
+      "end": 1
+     },
+     "variable": "rain",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": 15,
+      "source": null
+     },
+     "label": "hz.autumn_dry_sowing"
+    },
+    {
+     "id": "wheat_spring_dry",
+     "window": {
+      "from": "harvest",
+      "start": -9,
+      "end": -5
+     },
+     "variable": "balance",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": -80,
+      "source": null
+     },
+     "label": "hz.spring_dry"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 2,
+      "end": 4
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": -10,
+      "end": -8
+     },
+     "what": "watch.spring_regrowth"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": -4,
+      "end": -1
+     },
+     "what": "watch.grainfill_heat"
+    }
+   ]
+  },
+  {
+   "id": "w_barley",
+   "name": {
+    "en": "Winter barley",
+    "uk": "Ячмінь озимий"
+   },
+   "icon": "barley",
+   "colour": "#e8c66a",
+   "family": "poaceae",
+   "type": "winter",
+   "sowing": {
+    "tempC": {
+     "v": 14,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 28,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 2,
+    "source": null
+   },
+   "gdd": null,
+   "water": "medium",
+   "rooting": "medium",
+   "fixesNitrogen": false,
+   "residue": "high",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "barley_winterkill",
+     "window": {
+      "from": "sow",
+      "start": 8,
+      "end": 15
+     },
+     "variable": "tmin",
+     "agg": "min",
+     "cmp": "<",
+     "threshold": {
+      "v": -18,
+      "source": null
+     },
+     "label": "hz.winterkill"
+    },
+    {
+     "id": "barley_spring_dry",
+     "window": {
+      "from": "harvest",
+      "start": -8,
+      "end": -4
+     },
+     "variable": "balance",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": -70,
+      "source": null
+     },
+     "label": "hz.spring_dry"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 2,
+      "end": 4
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": -10,
+      "end": -8
+     },
+     "what": "watch.spring_regrowth"
+    }
+   ]
+  },
+  {
+   "id": "s_barley",
+   "name": {
+    "en": "Spring barley",
+    "uk": "Ячмінь ярий"
+   },
+   "icon": "barley",
+   "colour": "#f0d98c",
+   "family": "poaceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 5,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 11,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 2,
+    "source": null
+   },
+   "gdd": {
+    "base": 5,
+    "sum": {
+     "v": 1500,
+     "source": null
+    }
+   },
+   "water": "medium",
+   "rooting": "low",
+   "fixesNitrogen": false,
+   "residue": "medium",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "sbarley_tillering_dry",
+     "window": {
+      "from": "sow",
+      "start": 2,
+      "end": 5
+     },
+     "variable": "balance",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": -60,
+      "source": null
+     },
+     "label": "hz.early_dry"
+    },
+    {
+     "id": "sbarley_heat",
+     "window": {
+      "from": "harvest",
+      "start": -4,
+      "end": -1
+     },
+     "variable": "hot30",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 8,
+      "source": null
+     },
+     "label": "hz.grainfill_heat"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 2
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": -4,
+      "end": -1
+     },
+     "what": "watch.grainfill_heat"
+    }
+   ]
+  },
+  {
+   "id": "maize",
+   "name": {
+    "en": "Grain maize",
+    "uk": "Кукурудза на зерно"
+   },
+   "icon": "maize",
+   "colour": "#e07b39",
+   "family": "poaceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 12,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 15,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 4,
+    "source": null
+   },
+   "gdd": {
+    "base": 10,
+    "sum": {
+     "v": 1400,
+     "source": null
+    }
+   },
+   "water": "high",
+   "rooting": "high",
+   "fixesNitrogen": false,
+   "residue": "high",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "maize_flowering_heat",
+     "window": {
+      "from": "sow",
+      "start": 7,
+      "end": 9
+     },
+     "variable": "hot35",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 2,
+      "source": null
+     },
+     "label": "hz.flowering_heat"
+    },
+    {
+     "id": "maize_flowering_dry",
+     "window": {
+      "from": "sow",
+      "start": 6,
+      "end": 10
+     },
+     "variable": "balance",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": -150,
+      "source": null
+     },
+     "label": "hz.flowering_dry"
+    },
+    {
+     "id": "maize_early_frost",
+     "window": {
+      "from": "harvest",
+      "start": -3,
+      "end": 0
+     },
+     "variable": "tmin",
+     "agg": "min",
+     "cmp": "<",
+     "threshold": {
+      "v": -2,
+      "source": null
+     },
+     "label": "hz.early_frost"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 3
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "sow",
+      "start": 7,
+      "end": 9
+     },
+     "what": "watch.flowering"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": 0,
+      "end": 3
+     },
+     "what": "watch.grain_moisture"
+    }
+   ]
+  },
+  {
+   "id": "sunflower",
+   "name": {
+    "en": "Sunflower",
+    "uk": "Соняшник"
+   },
+   "icon": "sunflower",
+   "colour": "#f2c12e",
+   "family": "asteraceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 11,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 14,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 3,
+    "source": null
+   },
+   "gdd": {
+    "base": 10,
+    "sum": {
+     "v": 1300,
+     "source": null
+    }
+   },
+   "water": "high",
+   "rooting": "high",
+   "fixesNitrogen": false,
+   "residue": "low",
+   "returnGap": {
+    "v": 4,
+    "source": "ndsu_sunflower"
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "sunflower_flowering_heat",
+     "window": {
+      "from": "sow",
+      "start": 7,
+      "end": 9
+     },
+     "variable": "hot35",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 3,
+      "source": null
+     },
+     "label": "hz.flowering_heat"
+    },
+    {
+     "id": "sunflower_harvest_wet",
+     "window": {
+      "from": "harvest",
+      "start": 0,
+      "end": 2
+     },
+     "variable": "rain",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 60,
+      "source": null
+     },
+     "label": "hz.harvest_wet"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 3
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "sow",
+      "start": 7,
+      "end": 9
+     },
+     "what": "watch.flowering"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": -2,
+      "end": 0
+     },
+     "what": "watch.desiccation"
+    }
+   ]
+  },
+  {
+   "id": "soy",
+   "name": {
+    "en": "Soybean",
+    "uk": "Соя"
+   },
+   "icon": "soy",
+   "colour": "#8bbf4a",
+   "family": "fabaceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 13,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 13,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 2,
+    "source": null
+   },
+   "gdd": {
+    "base": 10,
+    "sum": {
+     "v": 1200,
+     "source": null
+    }
+   },
+   "water": "high",
+   "rooting": "medium",
+   "fixesNitrogen": true,
+   "residue": "low",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "soy_pod_dry",
+     "window": {
+      "from": "sow",
+      "start": 7,
+      "end": 10
+     },
+     "variable": "balance",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": -120,
+      "source": null
+     },
+     "label": "hz.podfill_dry"
+    },
+    {
+     "id": "soy_flowering_heat",
+     "window": {
+      "from": "sow",
+      "start": 6,
+      "end": 8
+     },
+     "variable": "hot35",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 3,
+      "source": null
+     },
+     "label": "hz.flowering_heat"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 3
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "sow",
+      "start": 7,
+      "end": 10
+     },
+     "what": "watch.podfill"
+    }
+   ]
+  },
+  {
+   "id": "sugar_beet",
+   "name": {
+    "en": "Sugar beet",
+    "uk": "Цукровий буряк"
+   },
+   "icon": "beet",
+   "colour": "#b04a6f",
+   "family": "amaranthaceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 7,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 16,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 5,
+    "source": null
+   },
+   "gdd": {
+    "base": 5,
+    "sum": {
+     "v": 2600,
+     "source": null
+    }
+   },
+   "water": "high",
+   "rooting": "high",
+   "fixesNitrogen": false,
+   "residue": "low",
+   "returnGap": {
+    "v": 3,
+    "source": "umn_rhizoctonia"
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "beet_summer_dry",
+     "window": {
+      "from": "sow",
+      "start": 8,
+      "end": 13
+     },
+     "variable": "balance",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": -200,
+      "source": null
+     },
+     "label": "hz.summer_dry"
+    },
+    {
+     "id": "beet_late_frost",
+     "window": {
+      "from": "sow",
+      "start": 0,
+      "end": 2
+     },
+     "variable": "tmin",
+     "agg": "min",
+     "cmp": "<",
+     "threshold": {
+      "v": -3,
+      "source": null
+     },
+     "label": "hz.late_frost"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 3
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": 0,
+      "end": 4
+     },
+     "what": "watch.harvest_logistics"
+    }
+   ]
+  },
+  {
+   "id": "w_rape",
+   "name": {
+    "en": "Winter rapeseed",
+    "uk": "Ріпак озимий"
+   },
+   "icon": "rapeseed",
+   "colour": "#e6e14a",
+   "family": "brassicaceae",
+   "type": "winter",
+   "sowing": {
+    "tempC": {
+     "v": 17,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 29,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 2,
+    "source": null
+   },
+   "gdd": null,
+   "water": "medium",
+   "rooting": "high",
+   "fixesNitrogen": false,
+   "residue": "medium",
+   "returnGap": {
+    "v": 3,
+    "source": "ndsu_blackleg"
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "rape_autumn_dry",
+     "window": {
+      "from": "sow",
+      "start": -1,
+      "end": 1
+     },
+     "variable": "rain",
+     "agg": "sum",
+     "cmp": "<",
+     "threshold": {
+      "v": 20,
+      "source": null
+     },
+     "label": "hz.autumn_dry_sowing"
+    },
+    {
+     "id": "rape_winterkill",
+     "window": {
+      "from": "sow",
+      "start": 10,
+      "end": 17
+     },
+     "variable": "tmin",
+     "agg": "min",
+     "cmp": "<",
+     "threshold": {
+      "v": -15,
+      "source": null
+     },
+     "label": "hz.winterkill"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 2,
+      "end": 4
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": -11,
+      "end": -9
+     },
+     "what": "watch.spring_regrowth"
+    }
+   ]
+  },
+  {
+   "id": "peas",
+   "name": {
+    "en": "Peas",
+    "uk": "Горох"
+   },
+   "icon": "peas",
+   "colour": "#5fae6e",
+   "family": "fabaceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 5,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 9,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 2,
+    "source": null
+   },
+   "gdd": {
+    "base": 5,
+    "sum": {
+     "v": 1300,
+     "source": null
+    }
+   },
+   "water": "medium",
+   "rooting": "low",
+   "fixesNitrogen": true,
+   "residue": "low",
+   "returnGap": {
+    "v": 3,
+    "source": "sdsu_pulses"
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "peas_flowering_heat",
+     "window": {
+      "from": "sow",
+      "start": 5,
+      "end": 7
+     },
+     "variable": "hot30",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 4,
+      "source": null
+     },
+     "label": "hz.flowering_heat"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 2
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": -1,
+      "end": 0
+     },
+     "what": "watch.lodging"
+    }
+   ]
+  },
+  {
+   "id": "chickpea",
+   "name": {
+    "en": "Chickpea",
+    "uk": "Нут"
+   },
+   "icon": "chickpea",
+   "colour": "#c9a66b",
+   "family": "fabaceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 7,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 11,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 2,
+    "source": null
+   },
+   "gdd": {
+    "base": 5,
+    "sum": {
+     "v": 1600,
+     "source": null
+    }
+   },
+   "water": "low",
+   "rooting": "high",
+   "fixesNitrogen": true,
+   "residue": "low",
+   "returnGap": {
+    "v": 4,
+    "source": "ndsu_ascochyta"
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "chickpea_wet_flowering",
+     "window": {
+      "from": "sow",
+      "start": 5,
+      "end": 8
+     },
+     "variable": "rain",
+     "agg": "sum",
+     "cmp": ">",
+     "threshold": {
+      "v": 120,
+      "source": null
+     },
+     "label": "hz.wet_disease"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 3
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "sow",
+      "start": 5,
+      "end": 8
+     },
+     "what": "watch.ascochyta"
+    }
+   ]
+  },
+  {
+   "id": "sorghum",
+   "name": {
+    "en": "Grain sorghum",
+    "uk": "Сорго зернове"
+   },
+   "icon": "sorghum",
+   "colour": "#a8553a",
+   "family": "poaceae",
+   "type": "spring",
+   "sowing": {
+    "tempC": {
+     "v": 14,
+     "source": null
+    },
+    "lengthDekads": {
+     "v": 2,
+     "source": null
+    }
+   },
+   "seasonDekads": {
+    "v": 12,
+    "source": null
+   },
+   "harvestLengthDekads": {
+    "v": 3,
+    "source": null
+   },
+   "gdd": {
+    "base": 10,
+    "sum": {
+     "v": 1300,
+     "source": null
+    }
+   },
+   "water": "low",
+   "rooting": "high",
+   "fixesNitrogen": false,
+   "residue": "high",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": null,
+   "hazards": [
+    {
+     "id": "sorghum_cold_start",
+     "window": {
+      "from": "sow",
+      "start": 0,
+      "end": 2
+     },
+     "variable": "tmin",
+     "agg": "min",
+     "cmp": "<",
+     "threshold": {
+      "v": 5,
+      "source": null
+     },
+     "label": "hz.cold_start"
+    }
+   ],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 1,
+      "end": 3
+     },
+     "what": "watch.emergence"
+    },
+    {
+     "window": {
+      "from": "harvest",
+      "start": 0,
+      "end": 2
+     },
+     "what": "watch.grain_moisture"
+    }
+   ]
+  },
+  {
+   "id": "fallow",
+   "name": {
+    "en": "Fallow",
+    "uk": "Пар"
+   },
+   "icon": "fallow",
+   "colour": "#9b8b73",
+   "family": "none",
+   "type": "fallow",
+   "sowing": null,
+   "seasonDekads": null,
+   "harvestLengthDekads": null,
+   "gdd": null,
+   "water": "low",
+   "rooting": "low",
+   "fixesNitrogen": false,
+   "residue": "low",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": {
+    "v": 1,
+    "source": null
+   },
+   "hazards": [],
+   "watch": [
+    {
+     "window": {
+      "from": "sow",
+      "start": 0,
+      "end": 3
+     },
+     "what": "watch.weeds"
+    }
+   ]
+  },
+  {
+   "id": "cover",
+   "name": {
+    "en": "Cover crop",
+    "uk": "Покривна культура"
+   },
+   "icon": "cover",
+   "colour": "#3f8f5a",
+   "family": "none",
+   "type": "cover",
+   "sowing": null,
+   "seasonDekads": null,
+   "harvestLengthDekads": null,
+   "gdd": null,
+   "water": "medium",
+   "rooting": "medium",
+   "fixesNitrogen": false,
+   "residue": "high",
+   "returnGap": {
+    "v": 0,
+    "source": null
+   },
+   "maxInRow": null,
+   "hazards": [],
+   "watch": []
+  }
+ ]
+}

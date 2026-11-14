@@ -1,8 +1,8 @@
 // Over-the-map controls (§5.3): settlement search, "locate me", layer chips and the legend.
 import { useEffect, useRef, useState } from 'react'
-import { DATA_BASE, parseMaybeGzip } from '../data/loader'
+import { DATA_BASE, US_DATA_BASE, parseMaybeGzip } from '../data/loader'
 import { useT } from '../i18n'
-import { OBLAST_BY_CODE, oblastName } from '../i18n/oblasts'
+import { OBLAST_BY_CODE, US_STATES, oblastName } from '../i18n/oblasts'
 import { useStore } from '../state/store'
 import { MAP_LAYERS, legend, type MapLayer } from './layers'
 import { buildIndex, searchPlaces, type Place, type PlaceIndex } from './search'
@@ -10,13 +10,17 @@ import { buildIndex, searchPlaces, type Place, type PlaceIndex } from './search'
 let indexPromise: Promise<PlaceIndex> | null = null
 function placeIndex(): Promise<PlaceIndex> {
   if (!indexPromise) {
-    indexPromise = fetch(`${DATA_BASE}/places.json.gz`)
+    const one = (base: string) => fetch(`${base}/places.json.gz`)
       .then((r) => {
         if (!r.ok) throw new Error(String(r.status))
         return r.arrayBuffer()
       })
       .then((b) => parseMaybeGzip(b))
-      .then((d) => buildIndex((d as { places: Place[] }).places))
+      .then((d) => (d as { places: Place[] }).places)
+    indexPromise = Promise.all([
+      one(DATA_BASE),
+      US_DATA_BASE ? one(US_DATA_BASE).catch(() => [] as Place[]) : Promise.resolve([] as Place[]),
+    ]).then(([ua, us]) => buildIndex([...ua, ...us.map((p) => [p[0], p[1], p[2], p[3], `us${p[4]}`, p[5]] as Place)]))
     indexPromise.catch(() => {
       indexPromise = null // allow a retry
     })
@@ -109,7 +113,7 @@ export function MapControls({ focusSearch = 0 }: { focusSearch?: number }) {
                 <li key={`${p[0]}-${p[2]}-${p[3]}`} role="option" aria-selected={i === active}>
                   <button type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => choose(p)}>
                     <b>{name(p)}</b> <span>{other(p) !== name(p) ? other(p) : ''}</span>
-                    <small>{OBLAST_BY_CODE[p[4]] ? oblastName(OBLAST_BY_CODE[p[4]], lang) : ''}</small>
+                    <small>{p[4].startsWith('us') ? oblastName(US_STATES[p[4].slice(2)] ?? '', lang) + (lang === 'uk' ? ', США' : ', USA') : OBLAST_BY_CODE[p[4]] ? oblastName(OBLAST_BY_CODE[p[4]], lang) : ''}</small>
                   </button>
                 </li>
               ))}

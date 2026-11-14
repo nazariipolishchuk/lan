@@ -67,11 +67,31 @@ def build(ua_txt: Path, admin1_file: Path) -> list[list]:
     return rows
 
 
+def build_us(cities: Path) -> list[list]:
+    """GeoNames cities5000 (CC-BY-4.0), USA rows: [name, name, lon, lat, state FIPS, population]."""
+    from lan.us_fields import POSTAL
+
+    rows = []
+    for r in csv.reader(cities.open(encoding="utf-8"), delimiter="	", quoting=csv.QUOTE_NONE):
+        if r[8] != "US" or r[10] not in POSTAL:
+            continue
+        rows.append([r[1], r[1], round(float(r[5]), 4), round(float(r[4]), 4), POSTAL[r[10]], int(r[14] or 0)])
+    rows.sort(key=lambda x: -x[5])
+    return rows
+
+
 if __name__ == "__main__":
     from lan.config import OUT_DIR, RAW_DIR
 
     src = RAW_DIR / "geonames"
-    rows = build(src / "UA.txt", src / "admin1CodesASCII.txt")
+    if len(sys.argv) > 1 and sys.argv[1] == "us":
+        from lan.config import DATA_DIR
+
+        OUT_DIR = DATA_DIR / "out_us"
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        rows = build_us(src / "cities5000.txt")
+    else:
+        rows = build(src / "UA.txt", src / "admin1CodesASCII.txt")
     raw = json.dumps({"v": 1, "source": "GeoNames (CC-BY-4.0)", "places": rows}, separators=(",", ":"), ensure_ascii=False)
     (OUT_DIR / "places.json.gz").write_bytes(gzip.compress(raw.encode("utf-8"), compresslevel=9, mtime=0))
     print(f"places: {len(rows)}, {(OUT_DIR / 'places.json.gz').stat().st_size / 1e3:.0f} KB gzip; no oblast: "

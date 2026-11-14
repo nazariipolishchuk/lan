@@ -123,6 +123,7 @@ function CompareBody({ data }: { data: Loaded }) {
           <button type="button" className="btn ghost small-btn" onClick={() => { setCompare(false); openPanel({ kind: 'priorities' }) }}>⚙ {t('card.priorities')}</button>
         </div>
         <p className="muted small cmp-note">{t('cmp.scaleNote')}</p>
+        <p className="cmp-legend">{t('cmp.legend.bars')} <span className="lk good">✓</span> {t('cmp.legend.good')} <span className="lk bad">✖</span> {t('cmp.legend.bad')} <span className="lk">•</span> {t('cmp.legend.none')}</p>
       </header>
       {unsafe ? <p className="note">{t('card.unsafeNote')}</p> : avail > 0 && (
         <div className="lanes" data-tour="lanes">
@@ -269,8 +270,9 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
     <article className="lane" data-lane={lane} data-tour={`lane-${lane}`}>
       <header className="lane-head">
         <h3 className="lane-name">{t(`cmp.lane.${lane}` as Key)} <span className="lane-sub">{t(`cmp.lane.${lane}.sub` as Key)}</span> <Info k={`info.lane.${lane}` as Key} /></h3>
-        {score && <span className="lane-score" aria-label={`${t('cmp.score')} ${Math.round(score.total)}`}><small>{t('cmp.score')}</small><b>{Math.round(score.total)}</b></span>}
+        {score && <span className="lane-score" aria-label={`${t('cmp.score')} ${Math.round(score.total)}`}><small>{t('cmp.score')}</small><b>{Math.round(score.total)}</b><small className="of100">/100</small></span>}
       </header>
+      {score && <LaneWhy score={score} />}
 
       {planTiles.length > 0 && (
         <ol className="chain" aria-label={t(`cmp.lane.${lane}` as Key)}>
@@ -438,5 +440,31 @@ function MyPicker({ mine, data, history, fillFrom }: { mine: MyPlan; data: Loade
         {mine.score && <button type="button" className="btn ghost small-btn" onClick={mine.clear}>{t('cmp.clear')}</button>}
       </div>
     </div>
+  )
+}
+
+/**
+ * One line under the lane title saying why the plan scores what it does: its weakest bar with the
+ * crop-season and weather risk behind it, its strongest bar, and the pairs between seasons.
+ */
+function LaneWhy({ score }: { score: PlanScore }) {
+  const t = useT()
+  const lang = useStore((s) => s.lang)
+  const bars = ['water', 'heat', 'soil', 'disease'] as const
+  const weak = bars.reduce((a, b) => (score.bars[b] < score.bars[a] ? b : a), 'water' as (typeof bars)[number])
+  const strong = bars.reduce((a, b) => (score.bars[b] > score.bars[a] ? b : a), 'water' as (typeof bars)[number])
+  const worstTile = [...score.tiles].sort((a, b) => a.bars[weak] - b.bars[weak])[0]
+  const hz = worstTile?.hazards.filter((h) => h.count > 0).sort((a, b) => b.count / Math.max(1, b.years) - a.count / Math.max(1, a.years))[0]
+  const good = score.links.reduce((n, l) => n + l.combos.filter((c) => c.sign > 0).length, 0)
+  const bad = score.links.reduce((n, l) => n + l.combos.filter((c) => c.sign < 0).length, 0)
+  const crop = worstTile ? worstTile.crop.name[lang] : ''
+  const low = (k: Key) => { const x = t(k); return x.charAt(0).toLowerCase() + x.slice(1) }
+  return (
+    <p className="lane-why">
+      <span className="why-weak">{t('cmp.why.weak', { bar: low(`bar.${weak}` as Key), v: Math.round(score.bars[weak]) })}
+        {worstTile && hz ? ` ${t('cmp.why.because', { crop, y: worstTile.y, what: low(hz.label as Key), n: hz.count, of: hz.years })}` : ''}</span>
+      {' '}<span className="why-strong">{t('cmp.why.strong', { bar: low(`bar.${strong}` as Key), v: Math.round(score.bars[strong]) })}</span>
+      {' '}<span className="why-pairs">{t('cmp.why.pairs', { good, bad })}</span>
+    </p>
   )
 }

@@ -1,6 +1,6 @@
 // Shared pieces of the field screens: data loading, the farmer's options, message rendering, small controls.
 import { useEffect, useMemo, useState } from 'react'
-import { loadClimate, loadCrops, loadField, loadRules } from '../data/loader'
+import { loadClimate, loadCrops, loadField, loadRules, regionOfId } from '../data/loader'
 import { buildCard, type CardModel, type CardOptions } from '../engine/card'
 import type { Msg } from '../engine/explain'
 import { completeYears, lastCompleteYear, type Bars as BarValues, type Scenario } from '../engine/score'
@@ -22,7 +22,8 @@ export function useFieldData(id: string): { status: Status; retry: () => void } 
       try {
         const field = await loadField(id)
         if (!field) return live && setStatus({ kind: 'missing' })
-        const [cell, crops, rules] = await Promise.all([loadClimate(field.cell, id.startsWith('fixture-')), loadCrops(), loadRules()])
+        const r = id.startsWith('fixture-') ? 'ua' : regionOfId(id)
+        const [cell, crops, rules] = await Promise.all([loadClimate(field.cell, id.startsWith('fixture-'), r), loadCrops(r), loadRules(r)])
         if (live) setStatus({ kind: 'ok', data: { field, cell, crops, rules } })
       } catch {
         if (live) setStatus({ kind: 'error' })

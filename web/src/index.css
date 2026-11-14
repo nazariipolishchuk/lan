@@ -598,3 +598,10 @@ table.change thead th { color: var(--frost); font-weight: 400; }
 .ladder-top b { font: 600 15px/1.25 var(--display); }
 .ladder-top:hover b { color: var(--gold); }
 @media (max-width: 899px), (pointer: coarse) { .ladder-top { min-height: 44px; } }
+.lane-why { margin: -2px 16px 6px; font-size: 13px; line-height: 1.45; color: var(--frost); }
+.lane-why .why-weak { color: var(--warn); }
+.lane-why .why-strong { color: var(--go); }
+.lane-score .of100 { margin-left: 2px; font-size: 11px; color: var(--frost); }
+.cmp-legend { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--frost); max-width: 900px; }
+.cmp-legend .lk { display: inline-block; min-width: 14px; text-align: center; font-weight: 700; color: var(--frost); }
+.cmp-legend .lk.good { color: var(--go); } .cmp-legend .lk.bad { color: var(--stop); }

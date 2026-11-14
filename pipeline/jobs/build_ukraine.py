@@ -30,13 +30,30 @@ import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
-from lan.config import OUT_DIR, RAW_DIR, WORK_DIR
-from lan.fields import OBLASTS, load_fields
+import os
 
-UA = WORK_DIR / "ua"
-NDVI = WORK_DIR / "ndvi"
-# Kyiv City and Sevastopol hold almost no farmland; Crimea is processed like any other oblast
-CODES = [c for c in OBLASTS if c not in ("30", "40")]
+from lan.config import DATA_DIR, RAW_DIR, WORK_DIR
+from lan.fields import OBLASTS as _UA_OBLASTS, load_fields
+from lan.us_fields import STATES
+
+# LAN_REGION=us builds the USA from work/fields_us (CSB 2018–2025) into data/out_us, state by state; the
+# state plays the oblast's role. Ukraine stays the default.
+REGION = os.environ.get("LAN_REGION", "ua")
+if REGION == "us":
+    OBLASTS = dict(STATES)
+    UA = WORK_DIR / "us"
+    NDVI = WORK_DIR / "ndvi_us"
+    FIELDS_SRC = WORK_DIR / "fields_us"
+    OUT_DIR = DATA_DIR / "out_us"
+    CODES = list(OBLASTS)
+else:
+    OBLASTS = _UA_OBLASTS
+    UA = WORK_DIR / "ua"
+    NDVI = WORK_DIR / "ndvi"
+    FIELDS_SRC = WORK_DIR / "fields"
+    OUT_DIR = DATA_DIR / "out"
+    # Kyiv City and Sevastopol hold almost no farmland; Crimea is processed like any other oblast
+    CODES = [c for c in OBLASTS if c not in ("30", "40")]
 
 
 def log(msg: str) -> None:
@@ -52,7 +69,7 @@ def codes_arg(xs: list[str]) -> list[str]:
 def split() -> None:
     """One pass over work/fields/*.parquet: rows of each oblast go to ua/<code>/fields/<part>.parquet."""
     names = {v: k for k, v in OBLASTS.items()}
-    for part in sorted((WORK_DIR / "fields").glob("*.parquet")):
+    for part in sorted(FIELDS_SRC.glob("*.parquet")):
         t = pq.read_table(part)
         ob = t.column("oblast").to_pandas()
         for name, idx in ob.groupby(ob).groups.items():
@@ -168,6 +185,8 @@ def oblast(code: str, models) -> dict:
                for i in cur_now.index if i in last.index}
         prev = curves[curves["y"] < now_year]
         bare = {i: bare_days(list(g[cols].to_numpy(dtype=np.float32))) for i, g in prev.groupby("id")}
+    if REGION == "us":
+        hist = merge_cdl(f["id"], hist)
     out = d / "out"
     shutil.rmtree(out, ignore_errors=True)
     n = write_chunks(f, out, soil, terr, hist, now, bare)
@@ -184,6 +203,23 @@ def oblast(code: str, models) -> dict:
     done.write_text(json.dumps(info, indent=1), encoding="utf-8")
     log(f"{code} done: {json.dumps({k: info[k] for k in ('fields', 'withHistory', 'chunks', 'curveChunks', 'seconds')})}")
     return info
+
+
+def merge_cdl(ids, hist: dict) -> dict:
+    """USA: seasons 2018–2025 from the USDA crop sequence (CDL codes), the rest from our HLS model."""
+    from lan.cdl import cdl_items
+
+    want = set(ids)
+    cols = [f"CDL{y}" for y in range(2018, 2026)]
+    out = dict(hist)
+    for p in sorted((WORK_DIR / "crops_us").glob("*.parquet")):
+        c = pd.read_parquet(p)
+        c = c[c["id"].isin(want)]
+        for row in c.itertuples(index=False):
+            codes = {2018 + i: getattr(row, col) for i, col in enumerate(cols)}
+            items = [it for it in out.get(row.id, []) if not (2018 <= it["y"] <= 2025)]
+            out[row.id] = sorted(items + cdl_items(codes), key=lambda it: it["y"])
+    return out
 
 
 # ---------- out-of-region validation ----------
@@ -289,7 +325,24 @@ def oblast_layer(scores: dict) -> None:
     summarised per oblast, drawn below the zoom where single fields appear."""
     from lan.export import LAST_GROUPS, history_items, last_group
 
-    src = json.loads((RAW_DIR / "admin" / "ukr_adm1_simplified.geojson").read_text(encoding="utf-8"))
+    if REGION == "us":
+        import shapely
+        from shapely.geometry import mapping, shape
+
+        from lan.us_fields import POSTAL
+
+        src = json.loads((RAW_DIR / "admin" / "usa_adm1_simplified.geojson").read_text(encoding="utf-8"))
+        feats0 = []
+        for ft in src["features"]:
+            post = ft["properties"]["shapeISO"].split("-")[1]
+            if post not in POSTAL:
+                continue  # Alaska, Hawaii, territories: no CSB fields
+            g = shapely.simplify(shape(ft["geometry"]), 0.01, preserve_topology=True)
+            ft = {**ft, "geometry": mapping(g), "properties": {**ft["properties"], "shapeISO": f"US-{POSTAL[post]}"}}
+            feats0.append(ft)
+        src = {"features": feats0}
+    else:
+        src = json.loads((RAW_DIR / "admin" / "ukr_adm1_simplified.geojson").read_text(encoding="utf-8"))
 
     def rnd(c):
         return [rnd(x) for x in c] if isinstance(c[0], list) else [round(c[0], 3), round(c[1], 3)]
@@ -317,7 +370,9 @@ def oblast_layer(scores: dict) -> None:
             })
         feats.append({"type": "Feature", "properties": props,
                       "geometry": {"type": ft["geometry"]["type"], "coordinates": rnd(ft["geometry"]["coordinates"])}})
-    out = {"type": "FeatureCollection", "attribution": "geoBoundaries gbOpen UKR ADM1 (OpenStreetMap, ODbL 1.0)", "features": feats}
+    attribution = ("geoBoundaries gbOpen USA ADM1 (U.S. Census Bureau TIGER, public domain)" if REGION == "us"
+                   else "geoBoundaries gbOpen UKR ADM1 (OpenStreetMap, ODbL 1.0)")
+    out = {"type": "FeatureCollection", "attribution": attribution, "features": feats}
     (OUT_DIR / "oblasts.json").write_text(json.dumps(out, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
     log(f"oblasts.json: {len(feats)} oblasts, {(OUT_DIR / 'oblasts.json').stat().st_size / 1e3:.0f} KB")
 

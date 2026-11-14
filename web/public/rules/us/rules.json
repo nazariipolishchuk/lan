@@ -1,0 +1,297 @@
+{
+ "v": 1,
+ "predecessor": [
+  {
+   "from": "soy",
+   "to": "maize",
+   "effect": 2,
+   "reason": "nitrogen",
+   "source": "isu_corn_rotation"
+  },
+  {
+   "from": "maize",
+   "to": "maize",
+   "effect": -2,
+   "reason": "rootworm_residue",
+   "source": "isu_corn_rotation"
+  },
+  {
+   "from": "maize",
+   "to": "soy",
+   "effect": 1,
+   "reason": "residue_break",
+   "source": "isu_soy_after_corn"
+  },
+  {
+   "from": "maize",
+   "to": "w_wheat",
+   "effect": -2,
+   "reason": "fusarium_late_sowing",
+   "source": "okstate_fhb"
+  },
+  {
+   "from": "soy",
+   "to": "w_wheat",
+   "effect": 1,
+   "reason": "disease_break_early_harvest",
+   "source": "ncsu_fhb"
+  },
+  {
+   "from": "w_wheat",
+   "to": "sugar_beet",
+   "effect": 1,
+   "reason": "classic_predecessor",
+   "source": "umn_rhizoctonia"
+  },
+  {
+   "from": "w_barley",
+   "to": "sugar_beet",
+   "effect": 1,
+   "reason": "classic_predecessor",
+   "source": "umn_rhizoctonia"
+  },
+  {
+   "from": "s_barley",
+   "to": "sugar_beet",
+   "effect": 1,
+   "reason": "classic_predecessor",
+   "source": "umn_rhizoctonia"
+  },
+  {
+   "from": "sunflower",
+   "to": "soy",
+   "effect": -2,
+   "reason": "white_mold",
+   "source": "ndsu_sclerotinia"
+  },
+  {
+   "from": "soy",
+   "to": "sunflower",
+   "effect": -2,
+   "reason": "white_mold",
+   "source": "ndsu_sclerotinia"
+  },
+  {
+   "from": "w_rape",
+   "to": "sunflower",
+   "effect": -2,
+   "reason": "white_mold",
+   "source": "ndsu_sclerotinia"
+  },
+  {
+   "from": "sunflower",
+   "to": "w_rape",
+   "effect": -2,
+   "reason": "white_mold",
+   "source": "ndsu_sclerotinia"
+  }
+ ],
+ "sharedHost": [
+  {
+   "crops": [
+    "sunflower",
+    "soy",
+    "w_rape",
+    "peas",
+    "chickpea"
+   ],
+   "disease": "white_mold",
+   "source": "ndsu_sclerotinia"
+  }
+ ],
+ "familyShareMax": [
+  {
+   "family": "poaceae",
+   "window": 5,
+   "maxShare": {
+    "v": 0.8,
+    "source": null
+   }
+  }
+ ],
+ "regionShareMax": [],
+ "combos": [
+  {
+   "id": "N_BONUS",
+   "sign": 1,
+   "points": {
+    "v": 3,
+    "source": "isu_corn_rotation"
+   },
+   "label": "combo.n_bonus",
+   "from": [
+    "soy",
+    "peas",
+    "chickpea"
+   ],
+   "to": [
+    "w_wheat",
+    "w_barley",
+    "s_barley",
+    "maize",
+    "sorghum"
+   ],
+   "source": "isu_corn_rotation"
+  },
+  {
+   "id": "BREAK_CROP",
+   "sign": 1,
+   "points": {
+    "v": 3,
+    "source": null
+   },
+   "label": "combo.break_crop",
+   "from": [
+    "w_rape"
+   ],
+   "to": [
+    "w_wheat"
+   ],
+   "source": null
+  },
+  {
+   "id": "CLASSIC_BEET",
+   "sign": 1,
+   "points": {
+    "v": 2,
+    "source": "umn_rhizoctonia"
+   },
+   "label": "combo.classic_beet",
+   "from": [
+    "w_wheat",
+    "w_barley"
+   ],
+   "to": [
+    "sugar_beet"
+   ],
+   "source": "umn_rhizoctonia"
+  },
+  {
+   "id": "FALLOW_MOISTURE",
+   "sign": 1,
+   "points": {
+    "v": 3,
+    "source": null
+   },
+   "label": "combo.fallow_moisture",
+   "from": [
+    "fallow"
+   ],
+   "to": [
+    "w_wheat"
+   ],
+   "source": null
+  },
+  {
+   "id": "COVER_SHIELD",
+   "sign": 1,
+   "points": {
+    "v": 2,
+    "source": null
+   },
+   "label": "combo.cover_shield",
+   "source": null
+  },
+  {
+   "id": "DIVERSITY_3",
+   "sign": 1,
+   "points": {
+    "v": 3,
+    "source": null
+   },
+   "label": "combo.diversity_3",
+   "source": null
+  },
+  {
+   "id": "CEREAL_REPEAT",
+   "sign": -1,
+   "points": {
+    "v": 3,
+    "source": null
+   },
+   "label": "combo.cereal_repeat",
+   "from": [
+    "w_wheat",
+    "w_barley",
+    "s_barley"
+   ],
+   "to": [
+    "w_wheat",
+    "w_barley",
+    "s_barley"
+   ],
+   "source": null
+  },
+  {
+   "id": "FUSARIUM",
+   "sign": -1,
+   "points": {
+    "v": 3,
+    "source": "okstate_fhb"
+   },
+   "label": "combo.fusarium",
+   "from": [
+    "maize"
+   ],
+   "to": [
+    "w_wheat",
+    "w_barley"
+   ],
+   "source": "okstate_fhb"
+  },
+  {
+   "id": "EARLY_RETURN",
+   "sign": -1,
+   "points": {
+    "v": 5,
+    "source": null
+   },
+   "label": "combo.early_return",
+   "source": null
+  },
+  {
+   "id": "WHITE_MOLD",
+   "sign": -1,
+   "points": {
+    "v": 3,
+    "source": "ndsu_sclerotinia"
+   },
+   "label": "combo.white_mold",
+   "from": [
+    "sunflower",
+    "soy",
+    "w_rape"
+   ],
+   "to": [
+    "sunflower",
+    "soy",
+    "w_rape"
+   ],
+   "source": "ndsu_sclerotinia"
+  },
+  {
+   "id": "DRY_PROFILE",
+   "sign": -1,
+   "points": {
+    "v": 2,
+    "source": null
+   },
+   "label": "combo.dry_profile",
+   "from": [
+    "sunflower",
+    "sugar_beet"
+   ],
+   "source": null
+  },
+  {
+   "id": "LATE_HARVEST",
+   "sign": -1,
+   "points": {
+    "v": 4,
+    "source": null
+   },
+   "label": "combo.late_harvest",
+   "source": null
+  }
+ ]
+}
