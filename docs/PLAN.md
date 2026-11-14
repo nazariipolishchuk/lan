@@ -37,7 +37,7 @@ Update this table at every checkpoint. It is the single source of truth after a 
 
 | Phase | Window | Outcome | Status |
 |---|---|---|---|
-| P0 Bootstrap and gates | Sat 09:00–10:30 | Repo, environments, measured facts, frozen data contract | ☐ |
+| P0 Bootstrap and gates | Sat 09:00–10:30 | Repo, environments, measured facts, frozen data contract | ☑ 11:25 (T&C, SMAP order and N's 0.8 items open) |
 | P1 Data foundation + app shell | Sat 10:30–14:00 | Real fields on the map, climate for Ukraine, card on fixtures | ☐ |
 | P2 Engine + history | Sat 14:00–18:00 | Card is real end to end in the deep zone | ☐ |
 | P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☐ |
@@ -51,10 +51,10 @@ Update this table at every checkpoint. It is the single source of truth after a 
 
 | Gate | Decided at | Question | Result |
 |---|---|---|---|
-| G1 | P0 | Field polygons: is FTW usable for Ukraine, is there a stable id, can the browser read its tiles? | ☐ |
-| G2 | P0 | HLS throughput: how many tiles can the night run finish by Sun 07:00? | ☐ |
-| G3 | P0 | Crop labels for Ukraine: Path A (KPI crop maps) or Path B (no local labels)? | ☐ |
-| G4 | P0 | Can the laptop fetch over HTTPS from Python and Node, or does all fetching go through the VPS? | ☐ |
+| G1 | P0 | Field polygons: is FTW usable for Ukraine, is there a stable id, can the browser read its tiles? | ☑ usable; own ids; own tiles (FTW tiles have no id) |
+| G2 | P0 | HLS throughput: how many tiles can the night run finish by Sun 07:00? | ☑ ~1 min per tile-season; all 90 tiles by morning if run overnight |
+| G3 | P0 | Crop labels for Ukraine: Path A (KPI crop maps) or Path B (no local labels)? | ☑ Path B+ (KPI winter/summer maps 2019–2024 + CSB-trained classifier) |
+| G4 | P0 | Can the laptop fetch over HTTPS from Python and Node, or does all fetching go through the VPS? | ☑ yes (except sites with broken chains) |
 | G5 | P3 | Does GitHub Pages serve PMTiles with HTTP Range requests? | ☐ |
 
 **How N drives the work:** one message per phase, for example

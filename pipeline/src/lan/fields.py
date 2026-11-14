@@ -132,12 +132,32 @@ def load_fields(path: Path, bbox: tuple[float, float, float, float] | None = Non
     """Read a fields parquet file or directory, optionally only fields whose centroid is in bbox (lon/lat)."""
     import pyarrow.parquet as pq
 
-    filters = None
-    if bbox:
-        w, s, e, n = bbox
-        filters = [("lon", ">=", w), ("lon", "<=", e), ("lat", ">=", s), ("lat", "<=", n)]
-    cols = None if columns is None else list(dict.fromkeys([*columns, "geometry"]))
-    df = pq.read_table(path, columns=cols, filters=filters).to_pandas()
+    path = Path(path)
+    files = sorted(path.glob("*.parquet")) if path.is_dir() else [path]
+    cols = None if columns is None else list(dict.fromkeys([*columns, "id", "geometry"]))
+    parts = []
+    # Row group by row group: coordinates first, geometry only where the bbox matches (2 GB RAM on the VPS).
+    for f in files:
+        pf = pq.ParquetFile(f)
+        for i in range(pf.num_row_groups):
+            if bbox:
+                w, s, e, n = bbox
+                xy = pf.read_row_group(i, columns=["lon", "lat"]).to_pandas()
+                mask = ((xy["lon"] >= w) & (xy["lon"] <= e) & (xy["lat"] >= s) & (xy["lat"] <= n)).to_numpy()
+                if not mask.any():
+                    continue
+                parts.append(pf.read_row_group(i, columns=cols).to_pandas()[mask])
+            else:
+                parts.append(pf.read_row_group(i, columns=cols).to_pandas())
+    if parts:
+        df = pd.concat(parts, ignore_index=True)
+    else:
+        df = pq.read_schema(files[0]).empty_table().to_pandas()
+        if cols:
+            df = df[cols]
+    # border fields can sit in two FTW partitions (288 of 598,088 in Ukraine): keep one
+    keep = ~df["id"].duplicated() if "id" in df.columns else slice(None)
+    df = df[keep].reset_index(drop=True)
     geom = gpd.GeoSeries.from_wkb(df.pop("geometry").values, crs="EPSG:4326")
     return gpd.GeoDataFrame(df, geometry=geom.values, crs="EPSG:4326")
 

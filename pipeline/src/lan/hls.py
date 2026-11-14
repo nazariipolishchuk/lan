@@ -73,14 +73,41 @@ def erode_labels(labels: np.ndarray) -> np.ndarray:
     return inner
 
 
-def _sums(labels: np.ndarray, ndvi: np.ndarray, valid: np.ndarray, n: int):
-    lab = labels.ravel()
-    v = valid.ravel()
-    total = np.bincount(lab, minlength=n + 1)[: n + 1]
-    lv = lab[v]
-    cnt = np.bincount(lv, minlength=n + 1)[: n + 1]
-    s = np.bincount(lv, weights=ndvi.ravel()[v].astype(np.float64), minlength=n + 1)[: n + 1]
-    return s, cnt, total
+class ZonalIndex:
+    """Pixel positions of all fields in a tile, computed once; each scene then touches only those pixels."""
+
+    def __init__(self, inner: np.ndarray, labels: np.ndarray, n: int):
+        self.shape = labels.shape
+        self.n = n
+        self.sel = np.flatnonzero(labels.ravel() > 0)
+        self.lab_all = labels.ravel()[self.sel]
+        self.lab_in = inner.ravel()[self.sel]
+        self.total_all = np.bincount(self.lab_all, minlength=n + 1)[: n + 1]
+        self.total_in = np.bincount(self.lab_in, minlength=n + 1)[: n + 1]
+        self.small = self.total_in < MIN_INNER_PIXELS  # these fields use all of their pixels
+
+    def take(self, raster: np.ndarray) -> np.ndarray:
+        return raster.ravel()[self.sel]
+
+    def means(self, values: np.ndarray, valid: np.ndarray):
+        """`values` and `valid` are already restricted with `take`. Returns mean, valid count, total count."""
+        n = self.n
+        w = np.where(valid, values, 0).astype(np.float64)
+        lab_in = np.where(valid, self.lab_in, 0)
+        lab_all = np.where(valid, self.lab_all, 0)
+        s_in = np.bincount(lab_in, weights=w, minlength=n + 1)[: n + 1]
+        c_in = np.bincount(lab_in, minlength=n + 1)[: n + 1]
+        s, c, t = s_in, c_in, self.total_in
+        if self.small.any():
+            s_all = np.bincount(lab_all, weights=w, minlength=n + 1)[: n + 1]
+            c_all = np.bincount(lab_all, minlength=n + 1)[: n + 1]
+            s = np.where(self.small, s_all, s_in)
+            c = np.where(self.small, c_all, c_in)
+            t = np.where(self.small, self.total_all, self.total_in)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            mean = np.where(c > 0, s / np.maximum(c, 1), np.nan)
+        mean[0] = np.nan
+        return mean, c, t
 
 
 def zonal_means(inner: np.ndarray, labels: np.ndarray, ndvi: np.ndarray, valid: np.ndarray, n: int):
@@ -88,16 +115,8 @@ def zonal_means(inner: np.ndarray, labels: np.ndarray, ndvi: np.ndarray, valid: 
 
     Interior pixels are used; fields with fewer than MIN_INNER_PIXELS interior pixels use all pixels.
     """
-    s_in, c_in, t_in = _sums(inner, ndvi, valid, n)
-    small = t_in < MIN_INNER_PIXELS
-    if small.any():
-        s_all, c_all, t_all = _sums(labels, ndvi, valid, n)
-        s_in = np.where(small, s_all, s_in)
-        c_in = np.where(small, c_all, c_in)
-        t_in = np.where(small, t_all, t_in)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        mean = np.where(c_in > 0, s_in / np.maximum(c_in, 1), np.nan)
-    return mean, c_in, t_in
+    z = ZonalIndex(inner, labels, n)
+    return z.means(z.take(ndvi), z.take(valid))
 
 
 def _marker(out_dir: Path, tile: str, year: int) -> Path:
@@ -225,17 +244,22 @@ def run_tile_year(tile: str, year: int, fields_loader, out_dir: Path, workers: i
     bounds = array_bounds(profile["height"], profile["width"], profile["transform"])
     fields = fields_loader(transform_bounds(profile["crs"], "EPSG:4326", *bounds))
     labels, ids = build_labels(fields, profile)
-    inner = erode_labels(labels)
     n = len(ids)
+    zi = ZonalIndex(erode_labels(labels), labels, n)
+    del labels, fields
     stats["fields"] = n
 
     def work(s):
         a = _get(session, s["ndvi"])
         b = _get(session, s["fmask"])
         ndvi, _, nodata = _read(a)
+        nd = zi.take(ndvi)
+        del ndvi
         fmask, _, _ = _read(b)
-        valid = valid_mask(fmask, ndvi, nodata)
-        mean, nvalid, ntotal = zonal_means(inner, labels, ndvi.astype(np.float32) * NDVI_SCALE, valid, n)
+        fm = zi.take(fmask)
+        del fmask
+        valid = valid_mask(fm, nd, nodata)
+        mean, nvalid, ntotal = zi.means(nd.astype(np.float32) * NDVI_SCALE, valid)
         frac = np.where(ntotal > 0, nvalid / np.maximum(ntotal, 1), 0.0)
         keep = np.nonzero(frac[1:] >= MIN_VALID_FRAC)[0] + 1
         return s, len(a) + len(b), keep, mean[keep], frac[keep]
