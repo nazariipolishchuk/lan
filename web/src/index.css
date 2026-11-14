@@ -124,3 +124,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .dots i { width: 8px; height: 8px; border-radius: 2px; background: var(--line); }
 .dots i[data-on="true"] { background: var(--warn); }
 .when { color: var(--gold); font-variant-numeric: tabular-nums; margin-right: 4px; }
+
+/* rotation health (P2) */
+.health { display: flex; align-items: center; gap: 0.6rem; }
+.health meter { flex: 1; height: 0.6rem; }
+.health-num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.tile-glyph sup { font-size: 0.6em; opacity: 0.7; margin-left: 1px; }
+.tile[data-group] { opacity: 0.85; }

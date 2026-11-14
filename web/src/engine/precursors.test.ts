@@ -10,7 +10,7 @@ describe('history → seasons', () => {
     const s = histToSeasons([h(2024, 'winter_cereal'), h(2025, 'sunflower', 0.4), h(2026, 'other')], 2024, 2026)
     expect(s).toEqual([
       { y: 2024, crop: 'w_wheat', known: true },
-      { y: 2025, crop: null, known: false },
+      { y: 2025, crop: null, known: false, hint: 'sunflower' }, // a hint, never used by the rules
       { y: 2026, crop: null, known: false },
     ])
   })

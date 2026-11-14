@@ -1,16 +1,19 @@
-// The field card's answer (PLAN §5.3): was / now / sow next / avoid / risks / watch.
-// P1 version: candidates are ranked by predecessor effect and combos; full scoring arrives in P2.
+// The field card's answer (PLAN §5.3): was / now / sow next / avoid / risks / watch / rotation health.
+// Candidates for the next open season are ranked by the full four-bar score of that season (score.ts).
 import { cropCalendar, planSlots, sowingOpen, type Slot } from './calendar'
 import { pairCombos, type ComboHit } from './combos'
 import { hazards, type HazardResult } from './hazards'
 import { checkRepeat, checkReturn, histToSeasons, type RuleCheck, type Season } from './precursors'
+import { rotationHealth, scorePlan, type Bars, type ScoreContext } from './score'
+import { watchList, type WatchItem } from './watch'
 import type { ClimateCell, CropDef, CropId, CropsFile, FieldRecord, RulesFile } from './types'
 
 export const HISTORY_FROM = 2016
 
 export interface Candidate {
   crop: CropDef
-  score: number
+  score: number // 0..100, the season's total
+  bars: Bars
   effect: number
   combos: ComboHit[]
   checks: RuleCheck[] // non-ok checks only ('unknown' ones: could not check)
@@ -21,12 +24,7 @@ export interface Avoid {
   check: RuleCheck
 }
 
-export interface WatchItem {
-  crop: CropDef
-  start: number // harvest-year dekads
-  end: number
-  what: string
-}
+export type { WatchItem }
 
 export interface CardModel {
   seasons: Season[]
@@ -37,6 +35,7 @@ export interface CardModel {
   avoid: Avoid[]
   risks: { crop: CropDef; results: HazardResult[] } | null
   watch: WatchItem[]
+  health: number // rotation health 0..100 of the last five known seasons, −1 when fewer than three are known
 }
 
 const FIELD_CROPS: CropId[] = ['w_wheat', 'w_barley', 's_barley', 'maize', 'sunflower', 'soy', 'sugar_beet', 'w_rape', 'peas', 'chickpea', 'sorghum']
@@ -48,6 +47,7 @@ export function buildCard(field: FieldRecord, cell: ClimateCell, crops: CropsFil
   const seasons = histToSeasons(field.hist, HISTORY_FROM, target - 1)
   const prev = [...seasons].reverse().find((s) => s.y === target - 1)
   const ctx = { crops, rules, cell }
+  const sctx: ScoreContext = { crops, rules, cell, field, today }
   const sowNext: Candidate[] = []
   const avoid: Avoid[] = []
   for (const id of FIELD_CROPS) {
@@ -67,20 +67,14 @@ export function buildCard(field: FieldRecord, cell: ClimateCell, crops: CropsFil
       avoid.push({ crop, check: { status: 'violation', rule: 'LATE_HARVEST', source: null, lastYear: target - 1 } })
       continue
     }
-    const score = effect * 3 + combos.reduce((s, c) => s + c.sign * c.points, 0)
-    sowNext.push({ crop, score, effect, combos, checks: checks.filter((c) => c.status !== 'ok') })
+    const sc = scorePlan([{ y: target, crop: id }], seasons, sctx)
+    sowNext.push({ crop, score: sc.total, bars: sc.tiles[0].bars, effect, combos, checks: checks.filter((c) => c.status !== 'ok') })
   }
   sowNext.sort((a, b) => b.score - a.score || a.checks.length - b.checks.length || FIELD_CROPS.indexOf(a.crop.id) - FIELD_CROPS.indexOf(b.crop.id))
   const top = sowNext[0]?.crop
   const lastComplete = Math.min(today.getFullYear() - (today.getMonth() < 10 ? 1 : 0), cell.years[cell.years.length - 1]?.y ?? 0)
   const risks = top ? { crop: top, results: hazards(top, cell, lastComplete) } : null
-  const watch: WatchItem[] = []
-  if (top) {
-    const cal = cropCalendar(top, cell)!
-    for (const w of top.watch) {
-      const base = w.window.from === 'sow' ? cal.sow.start : cal.harvest.start
-      watch.push({ crop: top, start: base + w.window.start, end: base + w.window.end, what: w.what })
-    }
-  }
-  return { seasons, slots, target, prev, sowNext: sowNext.slice(0, 3), avoid, risks, watch }
+  const watch: WatchItem[] = top ? watchList(top, cell, target) : []
+  const health = rotationHealth(seasons, sctx)
+  return { seasons, slots, target, prev, sowNext: sowNext.slice(0, 3), avoid, risks, watch, health }
 }

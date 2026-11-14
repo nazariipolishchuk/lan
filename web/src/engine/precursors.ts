@@ -5,6 +5,18 @@ export interface Season {
   y: number
   crop: CropId | null
   known: boolean
+  /** Group-level knowledge when the crop itself is unknown (winter / summer / uncultivated). */
+  group?: 'winter' | 'summer' | 'uncultivated'
+  /** A crop name the model suggests but is not confident about (shown as "maybe", never used by rules). */
+  hint?: CropId
+}
+
+/** Whether a season of this group rules out a crop of this type (a winter season cannot be sunflower). */
+export function groupExcludes(group: Season['group'], type: CropDef['type']): boolean {
+  if (!group) return false
+  if (group === 'uncultivated') return type === 'winter' || type === 'spring'
+  if (group === 'winter') return type === 'spring'
+  return type === 'winter' // summer season
 }
 
 /** History classes map onto crops for rule checks; `other` and `unknown` never satisfy a check. */
@@ -34,7 +46,10 @@ export function histToSeasons(hist: HistoryItem[], from: number, to: number,
     const items = hist.filter((h) => h.y === y)
     const item = items.find((h) => h.src === 'farmer') ?? items.find((h) => h.src !== 'farmer')
     const crop = item && (item.src === 'farmer' || item.p >= threshold) ? CLASS_TO_CROP[item.k] : null
-    out.push({ y, crop, known: crop !== null })
+    const s: Season = { y, crop, known: crop !== null }
+    if (!crop && item?.g) s.group = item.g
+    if (!crop && item && item.k !== 'unknown' && CLASS_TO_CROP[item.k]) s.hint = CLASS_TO_CROP[item.k]!
+    out.push(s)
   }
   return out
 }
@@ -63,7 +78,7 @@ export function checkReturn(seasons: Season[], crop: CropDef, year: number): Rul
   for (let y = year - 1; y >= year - gap; y--) {
     const s = seasonAt(seasons, y)
     if (s?.crop === crop.id) return { status: 'violation', rule: 'EARLY_RETURN', lastYear: y, allowedFrom: y + gap + 1, source }
-    if (!s || !s.known) unknownYears.push(y)
+    if (!s || (!s.known && !groupExcludes(s.group, crop.type))) unknownYears.push(y)
   }
   if (unknownYears.length) return { status: 'unknown', rule: 'EARLY_RETURN', unknownYears, source }
   return { status: 'ok', rule: 'EARLY_RETURN', source }

@@ -19,16 +19,20 @@ function value(y: YearIndicators, variable: HazardDef['variable'], d: number): n
   return y[variable][d]
 }
 
-/** Evaluate every hazard of `crop` over the last `span` complete harvest years of the cell. */
-export function hazards(crop: CropDef, cell: ClimateCell, lastYear: number, span = 20): HazardResult[] {
+/**
+ * Evaluate every hazard of `crop` over harvest years: the last `span` years up to `lastYear`,
+ * or an explicit list of years (a climate scenario, see score.ts).
+ */
+export function hazards(crop: CropDef, cell: ClimateCell, lastYear: number, span: number | number[] = 20): HazardResult[] {
   const cal = cropCalendar(crop, cell)
   if (!cal) return []
   const byYear = new Map(cell.years.map((y) => [y.y, y]))
+  const list = Array.isArray(span) ? span : Array.from({ length: span }, (_, i) => lastYear - span + 1 + i)
   return crop.hazards.map((h) => {
     const base = h.window.from === 'sow' ? cal.sow.start : cal.harvest.start
     const hitYears: number[] = []
     let years = 0
-    for (let Y = lastYear - span + 1; Y <= lastYear; Y++) {
+    for (const Y of list) {
       const vals: number[] = []
       let missing = false
       for (let k = h.window.start; k <= h.window.end; k++) {

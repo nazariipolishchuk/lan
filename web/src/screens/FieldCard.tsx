@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadClimate, loadCrops, loadField, loadRules } from '../data/loader'
 import { buildCard, type CardModel } from '../engine/card'
 import type { ClimateCell, CropDef, CropsFile, FieldRecord, HistClass, RulesFile } from '../engine/types'
-import { dekadLabel, useT, type Key } from '../i18n'
+import { useT, type Key } from '../i18n'
 import { oblastName } from '../i18n/oblasts'
 import { useStore, type Sheet } from '../state/store'
 
@@ -113,6 +113,7 @@ function CardBody({ data }: { data: Loaded }) {
   const cropName = (c: CropDef) => c.name[lang]
   const byId = (id: string) => crops.crops.find((c) => c.id === id)
   const locked = model.slots.find((s) => s.locked)
+  const fmtDay = (d: Date) => d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'short' })
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'long' })
 
   return (
@@ -136,11 +137,19 @@ function CardBody({ data }: { data: Loaded }) {
             {model.seasons.map((s) => {
               const item = field.hist.find((h) => h.y === s.y)
               const crop = item && s.known ? byId(HIST_TO_CROP[item.k] ?? '') : undefined
-              const name = item && s.known ? t(`hist.${item.k}` as Key) : t('card.unknownSeason')
+              const hint = !s.known && s.hint ? byId(s.hint) : undefined
+              const group = !s.known && s.group ? t(`hist.group.${s.group}` as Key) : null
+              const name = item && s.known ? t(`hist.${item.k}` as Key)
+                : group && hint ? t('hist.maybe', { group, crop: cropName(hint) })
+                : group ?? t('card.unknownSeason')
+              const conf = item && item.src === 'model' && item.k !== 'unknown' ? ` · ${t('hist.confidence', { p: Math.round(item.p * 100) })}` : ''
+              const glyph = s.known ? (crop ? ICON[crop.icon] ?? '·' : '·')
+                : s.group === 'uncultivated' ? ICON.fallow : s.group === 'winter' ? '❄' : s.group === 'summer' ? '☀' : '?'
               return (
-                <li key={s.y} className="tile" data-known={s.known} style={crop ? { ['--c' as string]: crop.colour } : undefined}
-                  title={`${s.y}: ${name}`} aria-label={`${s.y}: ${name}`}>
-                  <span className="tile-glyph" aria-hidden="true">{s.known ? (crop ? ICON[crop.icon] ?? '·' : '·') : '?'}</span>
+                <li key={s.y} className="tile" data-known={s.known} data-group={s.group ?? undefined}
+                  style={crop ? { ['--c' as string]: crop.colour } : hint ? { ['--c' as string]: hint.colour } : undefined}
+                  title={`${s.y}: ${name}${conf}`} aria-label={`${s.y}: ${name}${conf}`}>
+                  <span className="tile-glyph" aria-hidden="true">{glyph}{!s.known && s.group ? <sup>?</sup> : null}</span>
                   <span className="tile-year">{String(s.y).slice(2)}</span>
                 </li>
               )
@@ -216,11 +225,21 @@ function CardBody({ data }: { data: Loaded }) {
           <h3 id="watch" className="block-title"><span aria-hidden="true">◉</span> {t('card.watch')} <span className="muted">· {cropName(model.watch[0].crop)}</span></h3>
           <ul className="lines">
             {model.watch.map((w) => (
-              <li key={w.what}><span className="when">{dekadLabel(lang, w.start)}</span> {t(w.what as Key)}</li>
+              <li key={w.what}><span className="when">{t('card.watchRange', { from: fmtDay(w.from), to: fmtDay(w.to) })}</span> {t(w.what as Key)}</li>
             ))}
           </ul>
         </section>
       )}
+
+      <section className="row health" aria-label={t('card.health')}>
+        {model.health >= 0 ? (
+          <>
+            <h3 className="row-label">{t('card.health')}</h3>
+            <meter min={0} max={100} low={40} high={70} optimum={100} value={model.health} aria-label={t('card.health')} />
+            <span className="health-num">{model.health}</span>
+          </>
+        ) : <p className="muted">{t('card.healthUnknown')}</p>}
+      </section>
     </div>
   )
 }
