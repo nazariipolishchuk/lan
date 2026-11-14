@@ -41,8 +41,8 @@ Update this table at every checkpoint. It is the single source of truth after a 
 | P1 Data foundation + app shell | Sat 10:30–14:00 | Real fields on the map, climate for Ukraine, card on fixtures | ☑ 11:55 (Cherkasy only for soil/terrain/tiles; local-knowledge sheet done) |
 | P2 Engine + history | Sat 14:00–18:00 | Card is real end to end in the deep zone | ☑ 16:19 (history at group level, crop names as hints; rules reviewed by N) |
 | P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☑ 17:50, closed by N ~19:30 (live https://nazariipolishchuk.github.io/lan/; compare layout reworked after N's review; project-page draft in `docs/SUBMISSION_DRAFT.md`; T's bug pass moved to P4/P5) |
-| P4 Expansion + polish I | Sat 22:00–02:00 | Night run started, layers, search, About, mobile | ☐ |
-| Night | Sun 02:00–08:00 | VPS processes the rest of Ukraine; people sleep | ☐ |
+| P4 Expansion + polish I | Sat 22:00–02:00 | Night run started, layers, search, About, mobile | ☑ 21:45 (all Ukraine live: 597,488 fields with history; out-of-region check 79–95 %; layers, search, About, intro + tour, phone pass; 4.7 insurance recording left for N) |
+| Night | Sun 02:00–08:00 | VPS processes the rest of Ukraine; people sleep | ☑ not needed: HLS for all Ukraine finished Sat 20:48, ingested and deployed by 21:45 |
 | P5 Ingest + human validation | Sun 08:00–11:00 | Wider coverage live; validation numbers; bug list | ☐ |
 | P6 Fix and freeze | Sun 11:00–15:00 | Insurance submission at 12:00; feature freeze 14:00 | ☐ |
 | P7 Presentation | Sun 15:00–18:30 | Video ≤ 30 s, project page text and images, README | ☐ |

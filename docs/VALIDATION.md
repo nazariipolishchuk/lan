@@ -118,3 +118,27 @@ first Ukrainian crop-level ground truth.
 
 Card and the three strategies on the three showcase fields, real Cherkasy climate cells: card 2–7 ms,
 strategies 76–159 ms (exhaustive search, ≤ 11³ plans). Engine unit tests: 64, all green.
+
+## Crop history outside Cherkasy (V1b) — task 4.0
+
+The group model (winter / summer / not cultivated) was trained only in Cherkasy oblast
+(Forest-Steppe). After the all-Ukraine build it was checked against the KPI winter/summer maps
+2019–2024 (World Bank DDH 0066913) on one whole HLS tile per zone, fields ≥ 2 ha, field-seasons with
+a confident KPI label (`pipeline/jobs/build_ukraine.py validate`, `data/work/metrics_ua.json`).
+
+| Zone | Oblast | Tile | Agreement | Macro-F1 | F1 winter | F1 summer | F1 not cultivated | Field-seasons |
+|---|---|---|---|---|---|---|---|---|
+| Steppe, centre | Dnipropetrovsk | T36UWU | **95.0 %** | 0.698 | 0.933 | 0.967 | 0.193 | 31,617 |
+| Steppe / Forest-Steppe, east | Kharkiv | T36UXA | **94.2 %** | 0.669 | 0.841 | 0.966 | 0.199 | 22,717 |
+| Polissia, north-west | Volyn | T35ULS | **88.6 %** | 0.650 | 0.818 | 0.929 | 0.201 | 21,044 |
+| West | Lviv | T34UFA | **87.2 %** | 0.660 | 0.811 | 0.926 | 0.243 | 21,133 |
+| Steppe, south | Odesa | T35TPL | **79.3 %** | 0.628 | 0.855 | 0.835 | 0.195 | 19,990 |
+
+For reference, Cherkasy held-out tiles: 95.3 %.
+
+**Reading:** the model transfers well across the central and eastern Steppe; it loses 7–8 points in
+the wetter west and north-west and 16 points in the dry south, where summer crops are confused with
+winter crops and bare land more often. "Not cultivated" stays weak everywhere (F1 ≈ 0.2), as in
+Cherkasy. **Consequence for the product:** About shows this table; the card already marks every season
+as an estimate with its confidence and lets the farmer correct it. A model retrained with labels from
+several zones is the obvious next step (labels exist for all of Ukraine), not done tonight.

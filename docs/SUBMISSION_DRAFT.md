@@ -21,9 +21,9 @@ sequences, each with its reason and source.
 
 It answers Field Shift by giving a farmer a second opinion grounded in their own field's past and their
 district's changing climate, not in national averages. Crop history comes from NASA HLS greenness
-(30 m, Landsat + Sentinel-2, 2016–2026) for 29,214 fields in Cherkasy oblast, Ukraine *(P5: all
-Ukraine)*; NASA POWER gives 35 years of daily climate per cell. Winter/summer/fallow history agrees with
-independent Ukrainian crop maps for 95 % of field-seasons on areas the model never saw.
+(30 m, Landsat + Sentinel-2, 2016–2026) for 597,488 fields across all of Ukraine; NASA POWER gives 35 years of daily climate per cell. Winter/summer/fallow history agrees with
+independent Ukrainian crop maps for 95 % of field-seasons on held-out areas of the training region
+and for 79–95 % in five other zones (weakest in the dry south).
 
 It matters because rotation mistakes are made once and paid for years: a crop returned too soon, a
 winter crop sown after a late harvest, a dry profile left behind. Every recommendation names its
@@ -66,7 +66,8 @@ scores every candidate plan. The site is static (GitHub Pages); all scoring runs
 
 **Validation, including what failed**
 - Winter/summer/fallow: accuracy 95.3 % against the KPI / World Bank crop maps (2019–2024) on
-  held-out tiles (24,626 field-seasons); fallow is the weak class (F1 0.22).
+  held-out tiles (24,626 field-seasons); fallow is the weak class (F1 0.22). Outside the training
+  oblast: Dnipropetrovsk 95.0 %, Kharkiv 94.2 %, Volyn 88.6 %, Lviv 87.2 %, Odesa 79.3 %.
 - Crop names: a model trained on USDA Crop Sequence Boundaries reached accuracy 85.5 % (macro-F1 0.751,
   13,068 fields) on a held-out tile in the Red River Valley, USA, but its crop shares were implausible
   in Ukraine. We therefore show crop names only as "maybe …" hints and never use them in rules.
