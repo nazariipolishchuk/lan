@@ -4,11 +4,17 @@ import { MapControls } from './map/MapControls'
 import { MapView } from './map/MapView'
 import { About } from './screens/About'
 import { Compare } from './screens/Compare'
+import { DesignBoard } from './screens/DesignBoard'
 import { FieldCard } from './screens/FieldCard'
 import { DEMO_FIELD, Intro, Tour, introSeen, markIntroSeen } from './screens/Intro'
 import { parseHash, useStore } from './state/store'
 
 export default function App() {
+  if (import.meta.env.DEV && window.location.hash.startsWith('#/design')) return <DesignBoard />
+  return <Main />
+}
+
+function Main() {
   const t = useT()
   const lang = useStore((s) => s.lang)
   const setLang = useStore((s) => s.setLang)
