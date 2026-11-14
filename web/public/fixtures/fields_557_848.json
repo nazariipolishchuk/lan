@@ -1,0 +1,236 @@
+{
+ "v": 1,
+ "ck": "557_848",
+ "fields": [
+  {
+   "id": "fixture-A",
+   "c": [
+    32.06,
+    49.44
+   ],
+   "ha": 84.3,
+   "adm": {
+    "oblast": "Cherkasy",
+    "raion": "Cherkasy"
+   },
+   "cell": "49.5_31.875",
+   "soil": {
+    "clay": 28,
+    "sand": 18,
+    "soc": 2.4,
+    "ph": 6.4
+   },
+   "terrain": {
+    "slope": 1.8,
+    "slopeP90": 4.1,
+    "elev": 162
+   },
+   "hist": [
+    {
+     "y": 2016,
+     "k": "winter_cereal",
+     "p": 0.91,
+     "src": "model"
+    },
+    {
+     "y": 2017,
+     "k": "sunflower",
+     "p": 0.88,
+     "src": "model"
+    },
+    {
+     "y": 2018,
+     "k": "winter_cereal",
+     "p": 0.93,
+     "src": "model"
+    },
+    {
+     "y": 2019,
+     "k": "maize",
+     "p": 0.79,
+     "src": "model",
+     "g": "summer"
+    },
+    {
+     "y": 2020,
+     "k": "sunflower",
+     "p": 0.9,
+     "src": "model",
+     "g": "summer"
+    },
+    {
+     "y": 2021,
+     "k": "winter_cereal",
+     "p": 0.94,
+     "src": "model",
+     "g": "winter"
+    },
+    {
+     "y": 2022,
+     "k": "sunflower",
+     "p": 0.86,
+     "src": "model",
+     "g": "summer"
+    },
+    {
+     "y": 2023,
+     "k": "winter_cereal",
+     "p": 0.92,
+     "src": "model",
+     "g": "winter"
+    },
+    {
+     "y": 2024,
+     "k": "sunflower",
+     "p": 0.89,
+     "src": "model",
+     "g": "summer"
+    },
+    {
+     "y": 2025,
+     "k": "maize",
+     "p": 0.81,
+     "src": "model"
+    },
+    {
+     "y": 2026,
+     "k": "sunflower",
+     "p": 0.87,
+     "src": "model"
+    }
+   ],
+   "now": {
+    "state": "bare",
+    "asOf": "2026-11-08"
+   },
+   "bareDays": 141,
+   "flags": []
+  },
+  {
+   "id": "fixture-B",
+   "c": [
+    32.12,
+    49.4
+   ],
+   "ha": 132.7,
+   "adm": {
+    "oblast": "Cherkasy",
+    "raion": "Cherkasy"
+   },
+   "cell": "49.5_31.875",
+   "soil": {
+    "clay": 31,
+    "sand": 15,
+    "soc": 2.9,
+    "ph": 6.7
+   },
+   "terrain": {
+    "slope": 0.9,
+    "slopeP90": 2.2,
+    "elev": 171
+   },
+   "hist": [
+    {
+     "y": 2016,
+     "k": "soy",
+     "p": 0.84,
+     "src": "model"
+    },
+    {
+     "y": 2017,
+     "k": "winter_cereal",
+     "p": 0.95,
+     "src": "model"
+    },
+    {
+     "y": 2018,
+     "k": "sugar_beet",
+     "p": 0.77,
+     "src": "model"
+    },
+    {
+     "y": 2019,
+     "k": "spring_cereal",
+     "p": 0.71,
+     "src": "model",
+     "g": "summer"
+    },
+    {
+     "y": 2020,
+     "k": "rapeseed",
+     "p": 0.88,
+     "src": "model",
+     "g": "winter"
+    },
+    {
+     "y": 2021,
+     "k": "winter_cereal",
+     "p": 0.93,
+     "src": "model",
+     "g": "winter"
+    },
+    {
+     "y": 2022,
+     "k": "sunflower",
+     "p": 0.9,
+     "src": "model",
+     "g": "summer"
+    },
+    {
+     "y": 2023,
+     "k": "soy",
+     "p": 0.82,
+     "src": "model",
+     "g": "summer"
+    },
+    {
+     "y": 2024,
+     "k": "winter_cereal",
+     "p": 0.94,
+     "src": "model",
+     "g": "winter"
+    },
+    {
+     "y": 2025,
+     "k": "maize",
+     "p": 0.86,
+     "src": "model"
+    },
+    {
+     "y": 2026,
+     "k": "soy",
+     "p": 0.8,
+     "src": "model"
+    }
+   ],
+   "now": {
+    "state": "winter_crop",
+    "asOf": "2026-11-08"
+   },
+   "bareDays": 64,
+   "flags": []
+  },
+  {
+   "id": "fixture-C",
+   "c": [
+    32.15,
+    49.3
+   ],
+   "ha": 1.6,
+   "adm": {
+    "oblast": "Cherkasy",
+    "raion": "Cherkasy"
+   },
+   "cell": "49.5_31.875",
+   "soil": null,
+   "terrain": null,
+   "hist": [],
+   "now": null,
+   "bareDays": null,
+   "flags": [
+    "small",
+    "no_history"
+   ]
+  }
+ ]
+}

@@ -11,6 +11,7 @@ DATA_DIR = Path(os.environ.get("LAN_DATA_DIR", REPO_DIR / "data"))
 RAW_DIR = DATA_DIR / "raw"
 WORK_DIR = DATA_DIR / "work"
 OUT_DIR = DATA_DIR / "out"
+LOGS_DIR = Path(os.environ.get("LAN_LOGS_DIR", REPO_DIR / "logs"))
 
 
 def load_env(path: Path | None = None) -> None:

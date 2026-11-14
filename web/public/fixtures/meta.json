@@ -1,0 +1,17 @@
+{
+ "v": 1,
+ "built": "fixture",
+ "coverage": {
+  "historyTiles": [],
+  "climateOnly": false
+ },
+ "accuracy": null,
+ "sources": [
+  {
+   "id": "fixture",
+   "name": "Hand-made fixture data (not real)",
+   "version": "0",
+   "licence": "n/a"
+  }
+ ]
+}

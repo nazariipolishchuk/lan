@@ -13,3 +13,4 @@ __pycache__/
 logo/*
 !logo/final-v3/
 !logo/build_logo.py
+logs/
