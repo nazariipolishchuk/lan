@@ -44,7 +44,7 @@ describe('field card on fixtures', () => {
     expect(sun.check.lastYear).toBe(2026)
     expect(sun.check.allowedFrom).toBe(2034)
     expect(m.sowNext.map((c) => c.crop.id)).not.toContain('sunflower')
-    expect(m.sowNext.length).toBe(3)
+    expect(m.sowNext.length).toBeGreaterThanOrEqual(3)
   })
 
   it('no winter crop is offered on 14 November', () => {
@@ -60,7 +60,7 @@ describe('field card on fixtures', () => {
 
   it('field C without history still gets suggestions, flagged as unchecked', () => {
     const m = buildCard(byId('fixture-C'), cell, CROPS, RULES, today)
-    expect(m.sowNext.length).toBe(3)
+    expect(m.sowNext.length).toBeGreaterThanOrEqual(3)
     expect(m.sowNext.some((c) => c.checks.some((k) => k.status === 'unknown'))).toBe(true)
     expect(m.risks?.results.length).toBeGreaterThan(0)
   })
@@ -75,5 +75,17 @@ describe('emerged winter crop in the card', () => {
     expect(card.seasons.find((s) => s.y === 2027)).toMatchObject({ known: false, group: 'winter' })
     // a spring crop cannot have been the winter crop that is up; for winter candidates 2027 stays unknown
     for (const c of card.sowNext) if (c.crop.type === 'spring') for (const k of c.checks) expect(k.unknownYears ?? []).not.toContain(2027)
+  })
+})
+
+describe('the farmer chooses', () => {
+  it('Sow next lists only crops grown nearby, each with a score; the rest are other options', () => {
+    const f = { id: 'y', c: [32, 49.4] as [number, number], ha: 50, adm: { oblast: 'Cherkasy', raion: '' }, cell: 't',
+      soil: null, terrain: null, hist: [], now: null, bareDays: null, flags: [] }
+    const m = buildCard(f, syntheticCell(1990, 2026), CROPS, RULES, new Date(2026, 10, 14))
+    expect(m.sowNext.map((c) => c.crop.id)).not.toContain('peas')
+    expect(m.other.map((c) => c.crop.id)).toContain('peas')
+    for (const c of [...m.sowNext, ...m.other]) expect(c.score).toBeGreaterThanOrEqual(0)
+    for (let i = 1; i < m.sowNext.length; i++) expect(m.sowNext[i - 1].score).toBeGreaterThanOrEqual(m.sowNext[i].score)
   })
 })

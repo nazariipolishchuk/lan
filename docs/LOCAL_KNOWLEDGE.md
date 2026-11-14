@@ -60,3 +60,15 @@ Implications: a season's greenness curve can show a sudden drop and a second gre
 or a dip and a slow recovery. The classifier and the "now" state must not treat such a curve as a
 different crop by default; the card's gaps list should mention that a resown season may be
 misclassified.
+
+## Rules review (task 2.7, Sat 14 Nov 2026, ~16:10)
+
+- Return intervals of Resolution No. 164 accepted as the rule. **Sunflower:** N's impression is that
+  farmers nearby return it about every 5 years ("not sure"); the law says at least 7. The engine keeps 7
+  (sourced) and the card's "Avoid" line names the law, so a farmer who returns sooner sees why it is flagged.
+- Predecessor effects, combos and anti-combos (tables shown in chat) accepted as local practice
+  (source id `local_n`).
+- "Sow next": only crops grown nearby, each with its season score; the farmer chooses. Less familiar crops
+  (peas, chickpea, sorghum) stay available under "Other options" and in the Drought-proof plan. N: give
+  people the choice with how well each crop is likely to do and let them pick. The score is a 0–100 season
+  score from water, heat, soil and disease, not a yield forecast, and is labelled so.

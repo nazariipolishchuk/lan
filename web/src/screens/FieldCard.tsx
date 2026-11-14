@@ -113,6 +113,7 @@ function CardBody({ data }: { data: Loaded }) {
   const cropName = (c: CropDef) => c.name[lang]
   const byId = (id: string) => crops.crops.find((c) => c.id === id)
   const locked = model.slots.find((s) => s.locked)
+  const [showAll, setShowAll] = useState(false)
   const fmtDay = (d: Date) => d.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'short' })
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'long' })
 
@@ -169,10 +170,15 @@ function CardBody({ data }: { data: Loaded }) {
 
       <section className="block" data-tone="go" aria-labelledby="sow">
         <h3 id="sow" className="block-title"><span aria-hidden="true">✓</span> {t('card.sowNext')} <span className="muted">{t('card.sowFor', { year: model.target })}</span></h3>
+        <p className="muted small">{t('card.chooseHint')}</p>
         <ul className="picks">
-          {model.sowNext.map((c) => (
+          {(showAll ? [...model.sowNext, ...model.other] : model.sowNext).map((c) => (
             <li key={c.crop.id} className="pick" style={{ ['--c' as string]: c.crop.colour }}>
-              <span className="pick-name"><span aria-hidden="true">{ICON[c.crop.icon]}</span> {cropName(c.crop)}</span>
+              <span className="pick-name"><span aria-hidden="true">{ICON[c.crop.icon]}</span> {cropName(c.crop)}
+                <span className="pick-score" title={t('card.scoreHint')} aria-label={`${t('card.scoreHint')}: ${Math.round(c.score)}`}>
+                  <meter min={0} max={100} low={40} high={70} optimum={100} value={c.score} /> {Math.round(c.score)}
+                </span>
+              </span>
               {c.combos.filter((k) => k.sign > 0).map((k) => <span key={k.id} className="combo">+ {t(k.label as Key)}</span>)}
               {c.combos.filter((k) => k.sign < 0).map((k) => <span key={k.id} className="combo bad">− {t(k.label as Key)}</span>)}
               {c.checks.filter((k) => k.status === 'unknown').slice(0, 1).map((k) => (
@@ -181,6 +187,11 @@ function CardBody({ data }: { data: Loaded }) {
             </li>
           ))}
         </ul>
+        {model.other.length > 0 && (
+          <button type="button" className="btn ghost" aria-expanded={showAll} onClick={() => setShowAll((v) => !v)}>
+            {showAll ? t('card.lessOptions') : t('card.moreOptions', { n: model.other.length })}
+          </button>
+        )}
       </section>
 
       <section className="block" data-tone="stop" aria-labelledby="avoid">

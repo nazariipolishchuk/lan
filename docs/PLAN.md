@@ -39,7 +39,7 @@ Update this table at every checkpoint. It is the single source of truth after a 
 |---|---|---|---|
 | P0 Bootstrap and gates | Sat 09:00–10:30 | Repo, environments, measured facts, frozen data contract | ☑ 11:17 (SMAP order open; T&C read; team confirmed) |
 | P1 Data foundation + app shell | Sat 10:30–14:00 | Real fields on the map, climate for Ukraine, card on fixtures | ☑ 11:55 (Cherkasy only for soil/terrain/tiles; local-knowledge sheet done) |
-| P2 Engine + history | Sat 14:00–18:00 | Card is real end to end in the deep zone | ◐ 13:05: 2.1–2.6 code done (history at group level, crop names as hints); left: 2.6 browser check, 2.7 rules review with N |
+| P2 Engine + history | Sat 14:00–18:00 | Card is real end to end in the deep zone | ☑ 16:19 (history at group level, crop names as hints; rules reviewed by N) |
 | P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☐ |
 | P4 Expansion + polish I | Sat 22:00–02:00 | Night run started, layers, search, About, mobile | ☐ |
 | Night | Sun 02:00–08:00 | VPS processes the rest of Ukraine; people sleep | ☐ |

@@ -5,6 +5,7 @@ import { pairCombos, type ComboHit } from './combos'
 import { hazards, type HazardResult } from './hazards'
 import { checkRepeat, checkReturn, histToSeasons, type RuleCheck, type Season } from './precursors'
 import { rotationHealth, scorePlan, type Bars, type ScoreContext } from './score'
+import { LOCAL_CROPS } from './strategies'
 import { watchList, type WatchItem } from './watch'
 import type { ClimateCell, CropDef, CropId, CropsFile, FieldRecord, RulesFile } from './types'
 
@@ -31,7 +32,8 @@ export interface CardModel {
   slots: Slot[]
   target: number // harvest year of the first open slot
   prev: Season | undefined
-  sowNext: Candidate[]
+  sowNext: Candidate[] // crops grown nearby, best first; the farmer chooses
+  other: Candidate[] // other crops that are possible (peas, chickpea, sorghum)
   avoid: Avoid[]
   risks: { crop: CropDef; results: HazardResult[] } | null
   watch: WatchItem[]
@@ -75,11 +77,14 @@ export function buildCard(field: FieldRecord, cell: ClimateCell, crops: CropsFil
     const sc = scorePlan([{ y: target, crop: id }], seasons, sctx)
     sowNext.push({ crop, score: sc.total, bars: sc.tiles[0].bars, effect, combos, checks: checks.filter((c) => c.status !== 'ok') })
   }
+  const rank = (a: Candidate, b: Candidate) => b.score - a.score || a.checks.length - b.checks.length || FIELD_CROPS.indexOf(a.crop.id) - FIELD_CROPS.indexOf(b.crop.id)
+  const other = sowNext.filter((c) => !LOCAL_CROPS.includes(c.crop.id)).sort(rank)
+  const local = sowNext.filter((c) => LOCAL_CROPS.includes(c.crop.id)).sort(rank)
   sowNext.sort((a, b) => b.score - a.score || a.checks.length - b.checks.length || FIELD_CROPS.indexOf(a.crop.id) - FIELD_CROPS.indexOf(b.crop.id))
-  const top = sowNext[0]?.crop
+  const top = (local[0] ?? other[0])?.crop
   const lastComplete = Math.min(today.getFullYear() - (today.getMonth() < 10 ? 1 : 0), cell.years[cell.years.length - 1]?.y ?? 0)
   const risks = top ? { crop: top, results: hazards(top, cell, lastComplete) } : null
   const watch: WatchItem[] = top ? watchList(top, cell, target) : []
   const health = rotationHealth(seasons, sctx)
-  return { seasons, slots, target, prev, sowNext: sowNext.slice(0, 3), avoid, risks, watch, health }
+  return { seasons, slots, target, prev, sowNext: local, other, avoid, risks, watch, health }
 }

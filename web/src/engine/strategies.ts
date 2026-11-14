@@ -17,6 +17,12 @@ export interface Strategy {
 
 /** Crops the planner may place in a slot. */
 export const PLAN_CROPS: CropId[] = ['w_wheat', 'w_barley', 's_barley', 'maize', 'sunflower', 'soy', 'sugar_beet', 'w_rape', 'peas', 'chickpea', 'sorghum']
+/**
+ * Crops actually grown nearby (LOCAL_KNOWLEDGE.md; confirmed by N on 14 Nov). The card's "Sow next" and the
+ * Balanced plan use only these; other crops (peas, chickpea, sorghum) appear as other options and in the
+ * Drought-proof plan, where a less familiar but drought-tolerant crop is a fair idea.
+ */
+export const LOCAL_CROPS: CropId[] = ['w_wheat', 'w_barley', 's_barley', 'maize', 'sunflower', 'soy', 'sugar_beet', 'w_rape']
 /** Used when a field has no usable history. Local knowledge: wheat, maize and sunflower dominate (LOCAL_KNOWLEDGE.md). */
 export const REGIONAL_DEFAULT: CropId[] = ['w_wheat', 'maize', 'sunflower']
 /** Stand-in crop for a season known only at group level, for "As now" only (marked as assumed). */
@@ -70,33 +76,37 @@ export function suggestRotations(history: Season[], ctx: ScoreContext): Strategy
   const asNowScore = scorePlan(asNowSlots, history, ctx)
 
   // candidates per open slot: the first open slot only offers crops whose sowing window is still open
-  const open = years.map((y, i) => {
+  const open = (list: CropId[]) => years.map((y, i) => {
     if (lockedFirst && i === 0) return ['w_wheat'] as CropId[]
     const firstOpen = lockedFirst ? 1 : 0
-    return PLAN_CROPS.filter((id) => {
+    return list.filter((id) => {
       const def = crops.crops.find((c) => c.id === id)
       const cal = def && cropCalendar(def, cell)
       return !!cal && (i !== firstOpen || sowingOpen(cal, y, today))
     })
   })
-  const all: PlanScore[] = []
-  const rec = (i: number, acc: CropId[]) => {
-    if (i === years.length) {
-      all.push(scorePlan(slotsOf(years, acc, lockedFirst), history, ctx))
-      return
+  const search = (cands: CropId[][]) => {
+    const all: PlanScore[] = []
+    const rec = (i: number, acc: CropId[]) => {
+      if (i === years.length) {
+        all.push(scorePlan(slotsOf(years, acc, lockedFirst), history, ctx))
+        return
+      }
+      for (const c of cands[i]) rec(i + 1, [...acc, c])
     }
-    for (const c of open[i]) rec(i + 1, [...acc, c])
+    rec(0, [])
+    const feasible = all.filter((p) => !p.hard)
+    return feasible.length ? feasible : all
   }
-  rec(0, [])
-  const feasible = all.filter((p) => !p.hard)
-  const pool = feasible.length ? feasible : all
-  const byTotal = [...pool].sort((a, b) => b.total - a.total || key(a).localeCompare(key(b)))
+  const localPool = search(open(LOCAL_CROPS))
+  const pool = search(open(PLAN_CROPS))
+  const byTotal = [...localPool].sort((a, b) => b.total - a.total || key(a).localeCompare(key(b)))
   const balanced = byTotal.find((p) => differ(p.slots, asNowSlots) >= 1) ?? byTotal[0]
   const best = balanced.total
   const near = (minDiff: number) => pool
     .filter((p) => p.total >= best * 0.85 && differ(p.slots, balanced.slots) >= minDiff && differ(p.slots, asNowSlots) >= 1)
     .sort((a, b) => b.bars.water - a.bars.water || b.total - a.total || key(a).localeCompare(key(b)))[0]
-  const drought = near(2) ?? near(1) ?? byTotal.find((p) => differ(p.slots, balanced.slots) >= 1 && differ(p.slots, asNowSlots) >= 1)!
+  const drought = near(2) ?? near(1) ?? [...pool].sort((a, b) => b.total - a.total || key(a).localeCompare(key(b))).find((p) => differ(p.slots, balanced.slots) >= 1 && differ(p.slots, asNowSlots) >= 1)!
   return [
     { id: 'as_now', score: asNowScore, assumed: now.assumed, basis: now.basis },
     { id: 'balanced', score: balanced, assumed: [] },

@@ -3,7 +3,7 @@ import { explain } from './explain'
 import { hazards } from './hazards'
 import { histToSeasons, type Season } from './precursors'
 import { DEFAULT_WEIGHTS, scenarioYears, scorePlan, type PlanSlot, type ScoreContext } from './score'
-import { PLAN_CROPS, suggestRotations } from './strategies'
+import { LOCAL_CROPS, PLAN_CROPS, suggestRotations } from './strategies'
 import { CROPS, RULES, crop, field, syntheticCell } from './testkit'
 import type { ClimateCell, CropId, FieldRecord, HistoryItem } from './types'
 import { watchList } from './watch'
@@ -123,6 +123,7 @@ describe('strategies', () => {
       const keys = s.map((x) => x.score.slots.map((t) => t.crop).join(','))
       expect(new Set(keys).size).toBe(3)
       expect(s[1].score.hard).toBe(false)
+      expect(s[1].score.slots.every((x) => LOCAL_CROPS.includes(x.crop))).toBe(true) // Balanced: local crops only
     })
   }
 
