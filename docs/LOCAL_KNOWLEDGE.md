@@ -28,4 +28,15 @@ Most common nearby: wheat, soybean, maize, sunflower, sugar beet.
 - Soy shatter risk under drought → a hazard "dry spell at pod maturity → early harvest / losses".
 - Sugar beet harvest in October and maize harvest late (sometimes into winter) → `LATE_HARVEST`
   before a winter crop is realistic here.
-- Bad seasons with year and crop: not given yet.
+- Bad seasons with year and crop: N will not name any (he cannot judge agronomists' mistakes from memory).
+  Validation therefore rests on crop history, not on remembered bad years.
+
+## Crop damage by agrochemicals (regular, not unusual)
+
+When a crop is burnt by fertiliser or herbicide, farmers usually either **resow** the field or try
+to revive the crop with a neutraliser. N does not know the exact products.
+
+Implications: a season's greenness curve can show a sudden drop and a second green-up (resowing),
+or a dip and a slow recovery. The classifier and the "now" state must not treat such a curve as a
+different crop by default; the card's gaps list should mention that a resown season may be
+misclassified.
