@@ -10,7 +10,7 @@ Times are Europe/Kyiv.
 | Sat 14 Nov 10:35 | P0 started (planned 09:00). 95 min behind the §9 schedule from the start. |
 | Sat 14 Nov 11:10 | HLS job started on the VPS for tiles 1–40 (Cherkasy first); died at once: tile 1 (18,342 fields) hit the OOM killer |
 | Sat 14 Nov 11:15 | Restarted after memory fixes; tile 1 seasons take ≈ 1 min each, peak RSS 1.42 GB on the largest tile |
-| Sat 14 Nov 11:25 | CP0 reached (G1–G4 filled, fixtures load, VPS reads HLS). 55 min behind schedule, inside the 60-minute cut rule |
+| Sat 14 Nov 11:17 | CP0 reached (G1–G4 filled, fixtures load, VPS reads HLS). 47 min behind schedule, inside the 60-minute cut rule |
 
 ## Gates
 

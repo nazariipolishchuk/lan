@@ -37,7 +37,7 @@ Update this table at every checkpoint. It is the single source of truth after a 
 
 | Phase | Window | Outcome | Status |
 |---|---|---|---|
-| P0 Bootstrap and gates | Sat 09:00–10:30 | Repo, environments, measured facts, frozen data contract | ☑ 11:25 (T&C, SMAP order and N's 0.8 items open) |
+| P0 Bootstrap and gates | Sat 09:00–10:30 | Repo, environments, measured facts, frozen data contract | ☑ 11:17 (T&C, SMAP order and N's 0.8 items open) |
 | P1 Data foundation + app shell | Sat 10:30–14:00 | Real fields on the map, climate for Ukraine, card on fixtures | ☐ |
 | P2 Engine + history | Sat 14:00–18:00 | Card is real end to end in the deep zone | ☐ |
 | P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☐ |
