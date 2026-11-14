@@ -1,13 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { loadClimate, loadCrops, loadField, loadRules } from '../data/loader'
-import { buildCard, type CardModel } from '../engine/card'
-import type { ClimateCell, CropDef, CropsFile, FieldRecord, HistClass, RulesFile } from '../engine/types'
+import { useRef, useState } from 'react'
+import type { CardModel } from '../engine/card'
+import type { CropDef, HazardDef, HistClass } from '../engine/types'
 import { useT, type Key } from '../i18n'
 import { oblastName } from '../i18n/oblasts'
-import { useStore, type Sheet } from '../state/store'
+import { setUnsafe } from '../state/persist'
+import { useStore, type EvidenceTab, type Sheet } from '../state/store'
+import { useCard, useFieldData, type Loaded } from './common'
+import { CropDetail } from './CropDetail'
+import { Evidence } from './Evidence'
+import { HistoryEditor } from './HistoryEditor'
+import { Priorities } from './Priorities'
 
-type Loaded = { field: FieldRecord; cell: ClimateCell; crops: CropsFile; rules: RulesFile }
-type Status = { kind: 'loading' } | { kind: 'missing' } | { kind: 'error' } | { kind: 'ok'; data: Loaded }
+const TAB_OF: Record<HazardDef['variable'], EvidenceTab> = {
+  rain: 'rain', balance: 'moisture', wet: 'moisture', et0: 'moisture', hot30: 'heat', hot35: 'heat', tmin: 'heat',
+}
 
 /** Crop icons by `icon` in crops.json; words always accompany them (title and aria-label). */
 export const ICON: Record<string, string> = {
@@ -21,30 +27,11 @@ const HIST_TO_CROP: Partial<Record<HistClass, string>> = {
 }
 
 export function FieldCard({ id }: { id: string }) {
-  const [status, setStatus] = useState<Status>({ kind: 'loading' })
-  const [attempt, setAttempt] = useState(0)
+  const { status, retry } = useFieldData(id)
   const t = useT()
   const select = useStore((s) => s.select)
   const sheet = useStore((s) => s.sheet)
   const setSheet = useStore((s) => s.setSheet)
-
-  useEffect(() => {
-    let live = true
-    setStatus({ kind: 'loading' })
-    ;(async () => {
-      try {
-        const field = await loadField(id)
-        if (!field) return live && setStatus({ kind: 'missing' })
-        const [cell, crops, rules] = await Promise.all([loadClimate(field.cell, id.startsWith('fixture-')), loadCrops(), loadRules()])
-        if (live) setStatus({ kind: 'ok', data: { field, cell, crops, rules } })
-      } catch {
-        if (live) setStatus({ kind: 'error' })
-      }
-    })()
-    return () => {
-      live = false
-    }
-  }, [id, attempt])
 
   return (
     <aside className="sheet" data-state={sheet} aria-label={t('card.field')}>
@@ -57,10 +44,10 @@ export function FieldCard({ id }: { id: string }) {
       {status.kind === 'error' && (
         <div className="card-state">
           <p>{t('card.loadError')}</p>
-          <button type="button" className="btn" onClick={() => setAttempt((a) => a + 1)}>{t('card.retry')}</button>
+          <button type="button" className="btn" onClick={retry}>{t('card.retry')}</button>
         </div>
       )}
-      {status.kind === 'ok' && <CardBody data={status.data} />}
+      {status.kind === 'ok' && <Panels data={status.data} />}
     </aside>
   )
 }
@@ -103,12 +90,30 @@ function SheetGrip({ sheet, setSheet, label }: { sheet: Sheet; setSheet: (s: She
   )
 }
 
-function CardBody({ data }: { data: Loaded }) {
+/** The sheet shows the card or one of its sub-screens (S3, S4, S6, S7) for the same field. */
+function Panels({ data }: { data: Loaded }) {
+  const panel = useStore((s) => s.panel)
+  const openPanel = useStore((s) => s.openPanel)
+  const card = useCard(data)
+  return (
+    <div className="card" key={panel.kind}>
+      {panel.kind === 'card' && <CardBody data={data} model={card} />}
+      {panel.kind === 'history' && <HistoryEditor data={data} card={card} />}
+      {panel.kind === 'priorities' && <Priorities data={data} />}
+      {panel.kind === 'evidence' && <Evidence key={panel.tab ?? 'green'} data={data} card={card} tab={panel.tab} />}
+      {panel.kind === 'crop' && <CropDetail data={data} card={card} crop={panel.crop} year={panel.year} onClose={() => openPanel({ kind: 'card' })} />}
+    </div>
+  )
+}
+
+function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
   const t = useT()
   const lang = useStore((s) => s.lang)
-  const today = useStore((s) => s.today)
-  const { field, cell, crops, rules } = data
-  const model: CardModel = useMemo(() => buildCard(field, cell, crops, rules, today), [field, cell, crops, rules, today])
+  const openPanel = useStore((s) => s.openPanel)
+  const setCompare = useStore((s) => s.setCompare)
+  const updateUser = useStore((s) => s.updateUser)
+  const unsafe = useStore((s) => !!s.user.unsafe[data.field.id])
+  const { field, crops } = data
   const nf = (v: number, d = 1) => v.toLocaleString(lang === 'uk' ? 'uk-UA' : 'en-GB', { maximumFractionDigits: d })
   const cropName = (c: CropDef) => c.name[lang]
   const byId = (id: string) => crops.crops.find((c) => c.id === id)
@@ -118,7 +123,7 @@ function CardBody({ data }: { data: Loaded }) {
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'long' })
 
   return (
-    <div className="card">
+    <>
       <header className="card-head">
         <h2 className="card-title">
           <span className="ha">{nf(field.ha)}</span> <span className="unit">{t('card.ha')}</span>
@@ -132,26 +137,29 @@ function CardBody({ data }: { data: Loaded }) {
       </header>
 
       <section className="row" aria-labelledby="was">
-        <h3 id="was" className="row-label">{t('card.was')}</h3>
-        {field.hist.length ? (
+        <h3 id="was" className="row-label">{t('card.was')}
+          <button type="button" className="mini-btn" onClick={() => openPanel({ kind: 'history' })}>{t('card.edit')}</button>
+        </h3>
+        {field.hist.length || model.seasons.some((s) => s.farmer) ? (
           <ol className="strip">
             {model.seasons.map((s) => {
-              const item = field.hist.find((h) => h.y === s.y)
-              const crop = item && s.known ? byId(HIST_TO_CROP[item.k] ?? '') : undefined
+              const item = s.farmer ? undefined : field.hist.find((h) => h.y === s.y)
+              const crop = s.farmer ? (s.crop ? byId(s.crop) : undefined) : item && s.known ? byId(HIST_TO_CROP[item.k] ?? '') : undefined
               const hint = !s.known && s.hint ? byId(s.hint) : undefined
               const group = !s.known && s.group ? t(`hist.group.${s.group}` as Key) : null
-              const name = item && s.known ? t(`hist.${item.k}` as Key)
+              const name = s.farmer ? `${crop ? cropName(crop) : t('he.dontKnow')} (${t('card.farmerYear')})`
+                : item && s.known ? t(`hist.${item.k}` as Key)
                 : group && hint ? t('hist.maybe', { group, crop: cropName(hint) })
                 : group ?? t('card.unknownSeason')
               const conf = item && item.src === 'model' && item.k !== 'unknown' ? ` · ${t('hist.confidence', { p: Math.round(item.p * 100) })}` : ''
               const glyph = s.known ? (crop ? ICON[crop.icon] ?? '·' : '·')
                 : s.group === 'uncultivated' ? ICON.fallow : s.group === 'winter' ? '❄' : s.group === 'summer' ? '☀' : '?'
               return (
-                <li key={s.y} className="tile" data-known={s.known} data-group={s.group ?? undefined}
+                <li key={s.y} className="tile" data-known={s.known} data-group={s.group ?? undefined} data-farmer={!!s.farmer}
                   style={crop ? { ['--c' as string]: crop.colour } : hint ? { ['--c' as string]: hint.colour } : undefined}
                   title={`${s.y}: ${name}${conf}`} aria-label={`${s.y}: ${name}${conf}`}>
                   <span className="tile-glyph" aria-hidden="true">{glyph}{!s.known && s.group ? <sup>?</sup> : null}</span>
-                  <span className="tile-year">{String(s.y).slice(2)}</span>
+                  <span className="tile-year">{s.farmer ? <span aria-hidden="true">✎</span> : null}{String(s.y).slice(2)}</span>
                 </li>
               )
             })}
@@ -168,17 +176,19 @@ function CardBody({ data }: { data: Loaded }) {
       {locked && <p className="note">{t('card.lockedWinter', { year: locked.y })}</p>}
       {field.flags.includes('small') && <p className="note">{t('card.smallField')}</p>}
 
+      {unsafe ? <p className="note warn-note">{t('card.unsafeNote')}</p> : <>
       <section className="block" data-tone="go" aria-labelledby="sow">
         <h3 id="sow" className="block-title"><span aria-hidden="true">✓</span> {t('card.sowNext')} <span className="muted">{t('card.sowFor', { year: model.target })}</span></h3>
         <p className="muted small">{t('card.chooseHint')}</p>
         <ul className="picks">
           {(showAll ? [...model.sowNext, ...model.other] : model.sowNext).map((c) => (
             <li key={c.crop.id} className="pick" style={{ ['--c' as string]: c.crop.colour }}>
-              <span className="pick-name"><span aria-hidden="true">{ICON[c.crop.icon]}</span> {cropName(c.crop)}
+              <button type="button" className="pick-name" onClick={() => openPanel({ kind: 'crop', crop: c.crop.id, year: model.target })}>
+                <span aria-hidden="true">{ICON[c.crop.icon]}</span> {cropName(c.crop)}{c.pinned ? <span title={t('card.pinned')} aria-label={t('card.pinned')}> 📌</span> : null}
                 <span className="pick-score" title={t('card.scoreHint')} aria-label={`${t('card.scoreHint')}: ${Math.round(c.score)}`}>
                   <meter min={0} max={100} low={40} high={70} optimum={100} value={c.score} /> {Math.round(c.score)}
                 </span>
-              </span>
+              </button>
               {c.combos.filter((k) => k.sign > 0).map((k) => <span key={k.id} className="combo">+ {t(k.label as Key)}</span>)}
               {c.combos.filter((k) => k.sign < 0).map((k) => <span key={k.id} className="combo bad">− {t(k.label as Key)}</span>)}
               {c.checks.filter((k) => k.status === 'unknown').slice(0, 1).map((k) => (
@@ -191,6 +201,16 @@ function CardBody({ data }: { data: Loaded }) {
           <button type="button" className="btn ghost" aria-expanded={showAll} onClick={() => setShowAll((v) => !v)}>
             {showAll ? t('card.lessOptions') : t('card.moreOptions', { n: model.other.length })}
           </button>
+        )}
+        {model.blocked.length > 0 && (
+          <div className="blocked">
+            <p className="muted small">{t('card.blockedTitle')}</p>
+            <ul className="lines">
+              {model.blocked.map((b) => (
+                <li key={b.crop.id} className="blocked-item"><span aria-hidden="true">{ICON[b.crop.icon]}</span> {cropName(b.crop)} — {t(`block.${b.reason}` as Key)}</li>
+              ))}
+            </ul>
+          </div>
         )}
       </section>
 
@@ -219,7 +239,9 @@ function CardBody({ data }: { data: Loaded }) {
               <ul className="lines">
                 {hits.map((r) => (
                   <li key={r.id} className="risk">
-                    <span>{t('card.riskLine', { what: t(r.label as Key), count: r.count, years: r.years })}</span>
+                    <button type="button" className="linklike" onClick={() => openPanel({ kind: 'evidence', tab: TAB_OF[model.risks!.crop.hazards.find((h) => h.id === r.id)?.variable ?? 'rain'] })}>
+                      {t('card.riskLine', { what: t(r.label as Key), count: r.count, years: r.years })} ▸
+                    </button>
                     <span className="dots" aria-hidden="true">
                       {Array.from({ length: r.years }, (_, i) => <i key={i} data-on={i < r.count} />)}
                     </span>
@@ -236,11 +258,19 @@ function CardBody({ data }: { data: Loaded }) {
           <h3 id="watch" className="block-title"><span aria-hidden="true">◉</span> {t('card.watch')} <span className="muted">· {cropName(model.watch[0].crop)}</span></h3>
           <ul className="lines">
             {model.watch.map((w) => (
-              <li key={w.what}><span className="when">{t('card.watchRange', { from: fmtDay(w.from), to: fmtDay(w.to) })}</span> {t(w.what as Key)}</li>
+              <li key={w.what}><button type="button" className="linklike" onClick={() => openPanel({ kind: 'crop', crop: w.crop.id, year: model.target })}><span className="when">{t('card.watchRange', { from: fmtDay(w.from), to: fmtDay(w.to) })}</span> {t(w.what as Key)}</button></li>
             ))}
           </ul>
         </section>
       )}
+
+      </>}
+
+      <div className="actions">
+        {!unsafe && <button type="button" className="btn primary" onClick={() => setCompare(true)}>{t('card.compare')}</button>}
+        <button type="button" className="btn ghost" onClick={() => openPanel({ kind: 'evidence' })}>{t('card.why')}</button>
+        <button type="button" className="btn ghost" onClick={() => openPanel({ kind: 'priorities' })}>{t('card.priorities')}</button>
+      </div>
 
       <section className="row health" aria-label={t('card.health')}>
         {model.health >= 0 ? (
@@ -251,6 +281,9 @@ function CardBody({ data }: { data: Loaded }) {
           </>
         ) : <p className="muted">{t('card.healthUnknown')}</p>}
       </section>
-    </div>
+      <button type="button" className="btn ghost unsafe-btn" aria-pressed={unsafe} onClick={() => updateUser((d) => setUnsafe(d, field.id, !unsafe))}>
+        🚩 {unsafe ? t('card.unmarkUnsafe') : t('card.markUnsafe')}
+      </button>
+    </>
   )
 }

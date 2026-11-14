@@ -51,3 +51,26 @@ export function hazards(crop: CropDef, cell: ClimateCell, lastYear: number, span
     return { id: h.id, label: h.label, count: hitYears.length, years, hitYears }
   })
 }
+
+/** Per-year values of one hazard's aggregate (for the Evidence charts); null where the window has missing data. */
+export function hazardSeries(crop: CropDef, cell: ClimateCell, hazardId: string, years: number[]): { y: number; v: number | null }[] {
+  const cal = cropCalendar(crop, cell)
+  const h = crop.hazards.find((x) => x.id === hazardId)
+  if (!cal || !h) return []
+  const byYear = new Map(cell.years.map((y) => [y.y, y]))
+  const base = h.window.from === 'sow' ? cal.sow.start : cal.harvest.start
+  return years.map((Y) => {
+    const vals: number[] = []
+    for (let k = h.window.start; k <= h.window.end; k++) {
+      const d = base + k
+      const yr = byYear.get(d < 0 ? Y - 1 : d >= 36 ? Y + 1 : Y)
+      const v = yr ? value(yr, h.variable, ((d % 36) + 36) % 36) : null
+      if (v === null) return { y: Y, v: null }
+      vals.push(v)
+    }
+    if (!vals.length) return { y: Y, v: null }
+    const v = h.agg === 'sum' ? vals.reduce((a, b) => a + b, 0)
+      : h.agg === 'min' ? Math.min(...vals) : h.agg === 'max' ? Math.max(...vals) : vals.reduce((a, b) => a + b, 0) / vals.length
+    return { y: Y, v }
+  })
+}

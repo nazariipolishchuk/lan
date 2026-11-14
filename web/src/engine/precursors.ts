@@ -9,7 +9,12 @@ export interface Season {
   group?: 'winter' | 'summer' | 'uncultivated'
   /** A crop name the model suggests but is not confident about (shown as "maybe", never used by rules). */
   hint?: CropId
+  /** Set by the farmer in the history editor (S3). */
+  farmer?: boolean
 }
+
+/** The farmer's corrections: a crop, or 'unknown' ("I don't know"). */
+export type Overrides = Partial<Record<number, CropId | 'unknown'>>
 
 /** Whether a season of this group rules out a crop of this type (a winter season cannot be sunflower). */
 export function groupExcludes(group: Season['group'], type: CropDef['type']): boolean {
@@ -36,11 +41,12 @@ export const CONFIDENCE_THRESHOLD = 0.6
 
 /** One season per year from..to. A farmer's item wins; model items below the threshold are unknown. */
 export function histToSeasons(hist: HistoryItem[], from: number, to: number,
-  threshold = CONFIDENCE_THRESHOLD, farmerCrops: Partial<Record<number, CropId>> = {}): Season[] {
+  threshold = CONFIDENCE_THRESHOLD, farmerCrops: Overrides = {}): Season[] {
   const out: Season[] = []
   for (let y = from; y <= to; y++) {
-    if (farmerCrops[y]) {
-      out.push({ y, crop: farmerCrops[y]!, known: true })
+    const fc = farmerCrops[y]
+    if (fc) {
+      out.push(fc === 'unknown' ? { y, crop: null, known: false, farmer: true } : { y, crop: fc, known: true, farmer: true })
       continue
     }
     const items = hist.filter((h) => h.y === y)

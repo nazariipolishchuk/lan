@@ -1,8 +1,31 @@
 // Rotation strategies (PLAN §6.7): As now, Balanced, Drought-proof; "My plan" is scored by scorePlan.
 import { cropCalendar, planSlots, sowingOpen } from './calendar'
+import { blockReason } from './prefs'
 import type { Season } from './precursors'
 import { scorePlan, type PlanScore, type PlanSlot, type ScoreContext } from './score'
-import type { CropId } from './types'
+import type { ClimateCell, CropId, CropsFile } from './types'
+
+/** Dekads between a harvest and the next sowing that leave room for a cover crop (about two months). */
+export const COVER_GAP = 6
+
+/** A cover crop fits between `prev` (harvested the year before) and a spring crop `next`. */
+export function coverFits(prev: CropId | null, next: CropId, crops: CropsFile, cell: ClimateCell): boolean {
+  const n = crops.crops.find((c) => c.id === next)
+  const p = prev ? crops.crops.find((c) => c.id === prev) : undefined
+  if (!n || n.type !== 'spring' || !p || p.type === 'fallow' || p.type === 'cover') return false
+  const nc = cropCalendar(n, cell)
+  const pc = cropCalendar(p, cell)
+  if (!nc || !pc) return false
+  return nc.sow.start + 36 - pc.harvest.end >= COVER_GAP
+}
+
+/** Put a cover crop before every spring crop where the calendar allows it, and re-score. */
+export function withCovers(p: PlanScore, history: Season[], ctx: ScoreContext): PlanScore {
+  const prevOf = (y: number) => p.slots.find((s) => s.y === y - 1)?.crop ?? history.find((s) => s.y === y - 1)?.crop ?? null
+  const slots = p.slots.map((s) => (s.locked ? s : { ...s, cover: coverFits(prevOf(s.y), s.crop, ctx.crops, ctx.cell) }))
+  if (!slots.some((s) => s.cover)) return p
+  return scorePlan(slots, history, ctx)
+}
 
 export type StrategyId = 'as_now' | 'balanced' | 'drought'
 
@@ -70,20 +93,27 @@ export function suggestRotations(history: Season[], ctx: ScoreContext): Strategy
   const plan = planSlots(field, today)
   const years = plan.map((s) => s.y)
   const lockedFirst = !!plan[0]?.locked
+  // emerged winter crop: wheat unless the farmer says which one in the history editor
+  const lockedCrop: CropId = history.find((s) => s.y === years[0] && s.farmer && s.crop)?.crop ?? 'w_wheat'
   const now = asNow(history, years)
-  if (lockedFirst) now.crops[0] = 'w_wheat' // emerged winter crop: wheat unless the farmer says otherwise
+  if (lockedFirst) now.crops[0] = lockedCrop
+  const allowed = (id: CropId) => !ctx.prefs || !blockReason(id, ctx.prefs)
+  const pins = ctx.prefs?.pin ?? []
   const asNowSlots = slotsOf(years, now.crops, lockedFirst)
   const asNowScore = scorePlan(asNowSlots, history, ctx)
 
   // candidates per open slot: the first open slot only offers crops whose sowing window is still open
   const open = (list: CropId[]) => years.map((y, i) => {
-    if (lockedFirst && i === 0) return ['w_wheat'] as CropId[]
+    if (lockedFirst && i === 0) return [lockedCrop]
     const firstOpen = lockedFirst ? 1 : 0
-    return list.filter((id) => {
+    const fits = list.filter((id) => {
       const def = crops.crops.find((c) => c.id === id)
       const cal = def && cropCalendar(def, cell)
       return !!cal && (i !== firstOpen || sowingOpen(cal, y, today))
     })
+    // the farmer's bans and missing equipment remove crops; if nothing is left, the slot keeps all (and the UI says why)
+    const ok = fits.filter(allowed)
+    return ok.length ? ok : fits
   })
   const search = (cands: CropId[][]) => {
     const all: PlanScore[] = []
@@ -96,7 +126,10 @@ export function suggestRotations(history: Season[], ctx: ScoreContext): Strategy
     }
     rec(0, [])
     const feasible = all.filter((p) => !p.hard)
-    return feasible.length ? feasible : all
+    const base = feasible.length ? feasible : all
+    // pinned crops: prefer plans that keep every one of them
+    const pinned = pins.length ? base.filter((p) => pins.every((c) => p.slots.some((s) => s.crop === c))) : []
+    return pinned.length ? pinned : base
   }
   const localPool = search(open(LOCAL_CROPS))
   const pool = search(open(PLAN_CROPS))
@@ -109,8 +142,8 @@ export function suggestRotations(history: Season[], ctx: ScoreContext): Strategy
   const drought = near(2) ?? near(1) ?? [...pool].sort((a, b) => b.total - a.total || key(a).localeCompare(key(b))).find((p) => differ(p.slots, balanced.slots) >= 1 && differ(p.slots, asNowSlots) >= 1)!
   return [
     { id: 'as_now', score: asNowScore, assumed: now.assumed, basis: now.basis },
-    { id: 'balanced', score: balanced, assumed: [] },
-    { id: 'drought', score: drought, assumed: [] },
+    { id: 'balanced', score: withCovers(balanced, history, ctx), assumed: [] },
+    { id: 'drought', score: withCovers(drought, history, ctx), assumed: [] },
   ]
 }
 

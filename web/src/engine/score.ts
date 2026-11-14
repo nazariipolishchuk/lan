@@ -3,10 +3,11 @@ import { cropCalendar, sowingOpen } from './calendar'
 import { pairCombos, type ComboHit } from './combos'
 import { hazards, type HazardResult } from './hazards'
 import { checkRepeat, checkReturn, type RuleCheck, type Season } from './precursors'
+import { CASH_CROPS, IRRIGATION_RELIEF, type Priorities } from './prefs'
 import type { ClimateCell, CropDef, CropId, CropsFile, Family, FieldRecord, HazardDef, Level, RulesFile } from './types'
 
 export type Scenario = 'all' | 'last10' | 'dry'
-export interface Weights { water: number; heat: number; soil: number; disease: number }
+export interface Weights { water: number; heat: number; soil: number; disease: number; cash?: number }
 export interface Bars { water: number; heat: number; soil: number; disease: number }
 export const DEFAULT_WEIGHTS: Weights = { water: 0.3, heat: 0.2, soil: 0.25, disease: 0.25 }
 export const COMBO_BOUND = 15
@@ -21,6 +22,8 @@ export interface ScoreContext {
   today: Date
   scenario?: Scenario
   weights?: Weights
+  /** Farmer constraints: irrigation softens the water bar; blocked crops are filtered by the callers. */
+  prefs?: Priorities
 }
 
 export interface TileScore {
@@ -182,6 +185,7 @@ export function scorePlan(slots: PlanSlot[], history: Season[], ctx: ScoreContex
     // Water
     let water = 100 - 100 * cc.waterFreq - DEMAND[crop.water] * cc.deficitShare
     if (linkCombos.some((c) => c.id === 'DRY_PROFILE')) water -= 15
+    if (ctx.prefs?.irrigation) water = 100 - (100 - clamp(water)) * (1 - IRRIGATION_RELIEF)
     // Heat
     let heat = 100 * cc.heatReach * (1 - cc.heatFreq)
     if (windowClosed || late) heat = 0
@@ -225,8 +229,10 @@ export function scorePlan(slots: PlanSlot[], history: Season[], ctx: ScoreContex
     water: mean(tiles.map((t) => t.bars.water)), heat: mean(tiles.map((t) => t.bars.heat)),
     soil: mean(tiles.map((t) => t.bars.soil)), disease: mean(tiles.map((t) => t.bars.disease)),
   }
-  const wsum = weights.water + weights.heat + weights.soil + weights.disease
-  const base = wsum > 0 ? (bars.water * weights.water + bars.heat * weights.heat + bars.soil * weights.soil + bars.disease * weights.disease) / wsum : 0
+  const cashW = weights.cash ?? 0
+  const cash = slots.length ? (100 * slots.filter((s) => CASH_CROPS.includes(s.crop)).length) / slots.length : 0
+  const wsum = weights.water + weights.heat + weights.soil + weights.disease + cashW
+  const base = wsum > 0 ? (bars.water * weights.water + bars.heat * weights.heat + bars.soil * weights.soil + bars.disease * weights.disease + cash * cashW) / wsum : 0
   const comboPts = Math.max(-COMBO_BOUND, Math.min(COMBO_BOUND, comboRaw))
   const total = clamp(base + comboPts)
   return { slots, tiles, links, bars, comboPoints: comboPts, total: Math.round(total * 10) / 10, hard: tiles.some((t) => t.hard) }
