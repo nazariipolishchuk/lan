@@ -7,6 +7,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: process.env.LAN_BASE ?? '/',
   plugins: [react(), tailwindcss()],
+  optimizeDeps: { exclude: ['maplibre-gl'] },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],

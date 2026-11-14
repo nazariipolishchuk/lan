@@ -11,12 +11,24 @@ same commit that introduces the thing (hackathon rule: list all data, resources 
 | `ftw` | Fields of The World, global field boundaries 2024–2025 (Taylor Geospatial et al.; Robinson et al. 2026, arXiv:2605.11055) | Field polygons and ids | CC-BY-4.0 | https://source.coop/ftw/global-data |
 | `kpi_wb` | Winter/summer crop maps of Ukraine 2019–2024 (KPI methodology, Kussul et al. 2025), World Bank Development Data Hub dataset 0066913 | Winter / summer / uncultivated history per field; training labels at group level | CC-BY-4.0 | https://datacatalog.worldbank.org/int/search/dataset/0066913/ |
 | `power` | NASA POWER daily, agroclimatology community | Climate indicators per cell | NASA open data | https://power.larc.nasa.gov/ |
+| `nasadem` | NASA NASADEM_HGT v001 (SRTM reprocessed), LP DAAC | Field slope and elevation | NASA open data | https://www.earthdata.nasa.gov/data/catalog/lpcloud-nasadem-hgt-001 |
+| `soilgrids` | ISRIC SoilGrids 2.0 | Clay, sand, organic carbon, pH per field | CC-BY-4.0 | https://soilgrids.org |
+| `gibs` | NASA GIBS Blue Marble Next Generation | Basemap imagery at small scales | NASA open data | https://www.earthdata.nasa.gov/engage/open-data-services-software/earthdata-developer-portal/gibs-api |
+| `openfreemap` | OpenFreeMap vector tiles (OpenStreetMap data) | Dark basemap: water, roads, places, borders | OSM data ODbL 1.0; OpenFreeMap free, no key | https://openfreemap.org |
+| `cherkasy_normals` | Cherkasy climate normals 1981–2010 (NOAA NCEI, as tabulated on English Wikipedia) | Validation of POWER only | Facts cited | https://en.wikipedia.org/wiki/Cherkasy |
 | `kmu164` | Cabinet of Ministers of Ukraine Resolution No. 164 of 11.02.2010 (as amended 30.06.2010, No. 536): normatives of crop ratios in rotations | Minimum return intervals per crop; maximum crop shares by region | Public legal act | https://zakon.rada.gov.ua/laws/show/164-2010-п |
 
 ## Software
 
 | Library or tool | Used for | Licence |
 |---|---|---|
+| React, Vite, TypeScript | Web app | MIT, MIT, Apache-2.0 |
+| MapLibre GL JS | Map rendering | BSD-3-Clause |
+| PMTiles (protomaps) | Field tiles in one file | BSD-3-Clause |
+| Zustand, Recharts, Tailwind CSS, Vitest | State, charts, styles, tests | MIT |
+| Unbounded, Onest (Fontsource) | Typefaces | SIL Open Font License 1.1 |
+| earthaccess, rasterio, GeoPandas, Shapely, pandas, NumPy, SciPy, DuckDB, PyArrow, scikit-learn, LightGBM, pytest | Pipeline | MIT / BSD / Apache-2.0 |
+| tippecanoe | Building vector tiles | BSD-2-Clause |
 
 ## Images and text
 

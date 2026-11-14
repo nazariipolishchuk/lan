@@ -41,7 +41,7 @@ export function histToSeasons(hist: HistoryItem[], from: number, to: number,
 
 export interface RuleCheck {
   status: 'ok' | 'violation' | 'unknown'
-  rule: 'EARLY_RETURN' | 'MAX_IN_ROW'
+  rule: 'EARLY_RETURN' | 'MAX_IN_ROW' | 'LATE_HARVEST'
   lastYear?: number
   allowedFrom?: number
   unknownYears?: number[]

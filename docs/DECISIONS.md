@@ -10,6 +10,7 @@ Times are Europe/Kyiv.
 | Sat 14 Nov 10:35 | P0 started (planned 09:00). 95 min behind the §9 schedule from the start. |
 | Sat 14 Nov 11:10 | HLS job started on the VPS for tiles 1–40 (Cherkasy first); died at once: tile 1 (18,342 fields) hit the OOM killer |
 | Sat 14 Nov 11:15 | Restarted after memory fixes; tile 1 seasons take ≈ 1 min each, peak RSS 1.42 GB on the largest tile |
+| Sat 14 Nov 12:45 | CP1 reached: tapping a real Cherkasy field opens a card with its real area, soil and slope (history from fixtures only for the fixture fields); HLS job running |
 | Sat 14 Nov 11:17 | CP0 reached (G1–G4 filled, fixtures load, VPS reads HLS). 47 min behind schedule, inside the 60-minute cut rule |
 
 ## Gates
@@ -54,5 +55,11 @@ Times are Europe/Kyiv.
 | Sat 11:15 | HLS memory: per-scene arrays freed early, interior labels only (full labels just for fields without an interior), `MALLOC_ARENA_MAX=2`, `MALLOC_MMAP_THRESHOLD_=1048576`, `GDAL_CACHEMAX=64`; child processes get `< /dev/null` so they cannot eat the tile list. Peak on T36UUV: 1.66 GB → 1.42 GB. A crashed tile is retried with 2 workers | VPS has 1.9 GiB |
 | Sat 11:30 | **Basemap: NASA GIBS imagery (public domain) instead of EOX Sentinel-2 cloudless 2018+**, which is CC BY-NC-SA (non-commercial = a restriction under the T&C third-party rule). EOX's 2016 edition (CC-BY-4.0) is the fallback | T&C "Use of third-party materials" |
 | Sat 11:30 | Night run approved by N ("yes, maybe even earlier"): tiles 41–90 queued in tmux `hls2`, start as soon as tiles 1–40 finish | N, 11:25 |
+| Sat 12:20 | **Contract v1 extended (non-breaking): `YearIndicators.tmean`** (36 dekads of mean temperature) and dekad arrays may hold `null` (the unfinished current year) | Calendars are derived from temperature crossings (§6.5); tmin alone cannot give them |
+| Sat 12:30 | **Basemap: dark vector map (OpenFreeMap, OSM data, ODbL) + NASA GIBS Blue Marble at small scales; the fields coloured from our data are the hero.** No satellite basemap fine enough for fields is free of restrictions: EOX cloudless is CC BY-NC-SA for every year (licence page read 14 Nov), GIBS HLS true colour exists only in EPSG:4326 (MapLibre cannot reproject rasters), ESA WorldCover mosaic server (Terrascope) refused connections | T&C third-party rule |
+| Sat 12:30 | The app shows a typographic "Lan" wordmark, not the logo: a 28 px icon cannot carry a readable "SI-assisted" mark (rule C6). The logo with its mark goes to the video and the project page | Rule C6 |
+| Sat 12:35 | Terrain: DEM smoothed 5 × 5 before slope; soil sampled at centroids (12 % no-data in Cherkasy, shown as unknown) | See VALIDATION.md |
+| Sat 12:40 | Card v1 ranks next crops by predecessor effect and combos; full four-bar scoring and strategies are P2 | Plan order |
+| Sat 12:40 | The field id decodes to its centroid, so `#/f/{id}` alone locates the chunk; no id index is shipped | Smaller site, shareable links |
 | Sat 11:35 | O2 resolved: N is the Team Owner; the team is registered for a local event in virtual format, Field Shift selected. Deadline = Sun 15 Nov 23:59 Kyiv time | N, 11:35 |
 | Sat 11:20 | HLS budget: a full run averages **17.5 MB per scene** (454 MB / 26 scenes on T36UVV; the 5.6 MB probe was a partial-coverage scene). 990 tile-seasons × ≈ 450 MB ≈ 450 GB of traffic, inside the 3 TiB monthly allowance; nothing large stays on disk | Measured in the G2 run |

@@ -1,0 +1,189 @@
+import { useEffect, useMemo, useState } from 'react'
+import { loadClimate, loadCrops, loadField, loadRules } from '../data/loader'
+import { buildCard, type CardModel } from '../engine/card'
+import type { ClimateCell, CropDef, CropsFile, FieldRecord, HistClass, RulesFile } from '../engine/types'
+import { dekadLabel, useT, type Key } from '../i18n'
+import { oblastName } from '../i18n/oblasts'
+import { useStore } from '../state/store'
+
+type Loaded = { field: FieldRecord; cell: ClimateCell; crops: CropsFile; rules: RulesFile }
+type Status = { kind: 'loading' } | { kind: 'missing' } | { kind: 'error' } | { kind: 'ok'; data: Loaded }
+
+/** Crop icons by `icon` in crops.json; words always accompany them (title and aria-label). */
+export const ICON: Record<string, string> = {
+  wheat: '🌾', barley: '🌾', maize: '🌽', sunflower: '🌻', soy: '🫛', beet: '🫜', rapeseed: '🌼',
+  peas: '🫛', chickpea: '🫘', sorghum: '🌾', fallow: '▫', cover: '🌱',
+}
+
+const HIST_TO_CROP: Partial<Record<HistClass, string>> = {
+  winter_cereal: 'w_wheat', spring_cereal: 's_barley', rapeseed: 'w_rape', maize: 'maize',
+  sunflower: 'sunflower', soy: 'soy', sugar_beet: 'sugar_beet',
+}
+
+export function FieldCard({ id }: { id: string }) {
+  const [status, setStatus] = useState<Status>({ kind: 'loading' })
+  const [attempt, setAttempt] = useState(0)
+  const t = useT()
+  const select = useStore((s) => s.select)
+  const sheet = useStore((s) => s.sheet)
+  const setSheet = useStore((s) => s.setSheet)
+
+  useEffect(() => {
+    let live = true
+    setStatus({ kind: 'loading' })
+    ;(async () => {
+      try {
+        const field = await loadField(id)
+        if (!field) return live && setStatus({ kind: 'missing' })
+        const [cell, crops, rules] = await Promise.all([loadClimate(field.cell, id.startsWith('fixture-')), loadCrops(), loadRules()])
+        if (live) setStatus({ kind: 'ok', data: { field, cell, crops, rules } })
+      } catch {
+        if (live) setStatus({ kind: 'error' })
+      }
+    })()
+    return () => {
+      live = false
+    }
+  }, [id, attempt])
+
+  return (
+    <aside className="sheet" data-state={sheet} aria-label={t('card.field')}>
+      <div className="sheet-bar">
+        <button type="button" className="sheet-handle" onClick={() => setSheet(sheet === 'full' ? 'half' : 'full')}
+          aria-label={sheet === 'full' ? t('card.collapse') : t('card.expand')} />
+        <button type="button" className="icon-btn" onClick={() => select(null)} aria-label={t('card.close')}>✕</button>
+      </div>
+      {status.kind === 'loading' && <div className="card-state" aria-busy="true"><span className="pulse" /></div>}
+      {status.kind === 'missing' && <p className="card-state">{t('card.notFound')}</p>}
+      {status.kind === 'error' && (
+        <div className="card-state">
+          <p>{t('card.loadError')}</p>
+          <button type="button" className="btn" onClick={() => setAttempt((a) => a + 1)}>{t('card.retry')}</button>
+        </div>
+      )}
+      {status.kind === 'ok' && <CardBody data={status.data} />}
+    </aside>
+  )
+}
+
+function CardBody({ data }: { data: Loaded }) {
+  const t = useT()
+  const lang = useStore((s) => s.lang)
+  const today = useStore((s) => s.today)
+  const { field, cell, crops, rules } = data
+  const model: CardModel = useMemo(() => buildCard(field, cell, crops, rules, today), [field, cell, crops, rules, today])
+  const nf = (v: number, d = 1) => v.toLocaleString(lang === 'uk' ? 'uk-UA' : 'en-GB', { maximumFractionDigits: d })
+  const cropName = (c: CropDef) => c.name[lang]
+  const byId = (id: string) => crops.crops.find((c) => c.id === id)
+  const locked = model.slots.find((s) => s.locked)
+  const fmtDate = (iso: string) => new Date(iso).toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'long' })
+
+  return (
+    <div className="card">
+      <header className="card-head">
+        <h2 className="card-title">
+          <span className="ha">{nf(field.ha)}</span> <span className="unit">{t('card.ha')}</span>
+        </h2>
+        <p className="card-sub">
+          {oblastName(field.adm.oblast, lang)}
+          {field.terrain ? <> · {t('card.slope')} {nf(field.terrain.slope)}%</> : <> · {t('card.terrainNone')}</>}
+          {field.soil ? <> · {t('card.soilClay', { v: nf(field.soil.clay, 0) })} · {t('card.soilSoc', { v: nf(field.soil.soc, 1) })}</> : <> · {t('card.soilNone')}</>}
+        </p>
+        <span className="badge">{t('card.estimate')}</span>
+      </header>
+
+      <section className="row" aria-labelledby="was">
+        <h3 id="was" className="row-label">{t('card.was')}</h3>
+        {field.hist.length ? (
+          <ol className="strip">
+            {model.seasons.map((s) => {
+              const item = field.hist.find((h) => h.y === s.y)
+              const crop = item && s.known ? byId(HIST_TO_CROP[item.k] ?? '') : undefined
+              const name = item && s.known ? t(`hist.${item.k}` as Key) : t('card.unknownSeason')
+              return (
+                <li key={s.y} className="tile" data-known={s.known} style={crop ? { ['--c' as string]: crop.colour } : undefined}
+                  title={`${s.y}: ${name}`} aria-label={`${s.y}: ${name}`}>
+                  <span className="tile-glyph" aria-hidden="true">{s.known ? (crop ? ICON[crop.icon] ?? '·' : '·') : '?'}</span>
+                  <span className="tile-year">{String(s.y).slice(2)}</span>
+                </li>
+              )
+            })}
+          </ol>
+        ) : (
+          <p className="muted">{field.flags.includes('no_history') ? t('card.historyPending') : t('card.noHistory')}</p>
+        )}
+      </section>
+
+      <section className="row">
+        <h3 className="row-label">{t('card.now')}</h3>
+        <p>{field.now ? t(`now.${field.now.state}` as Key, { date: fmtDate(field.now.asOf) }) : t('now.unknown')}</p>
+      </section>
+      {locked && <p className="note">{t('card.lockedWinter', { year: locked.y })}</p>}
+      {field.flags.includes('small') && <p className="note">{t('card.smallField')}</p>}
+
+      <section className="block" data-tone="go" aria-labelledby="sow">
+        <h3 id="sow" className="block-title"><span aria-hidden="true">✓</span> {t('card.sowNext')} <span className="muted">{t('card.sowFor', { year: model.target })}</span></h3>
+        <ul className="picks">
+          {model.sowNext.map((c) => (
+            <li key={c.crop.id} className="pick" style={{ ['--c' as string]: c.crop.colour }}>
+              <span className="pick-name"><span aria-hidden="true">{ICON[c.crop.icon]}</span> {cropName(c.crop)}</span>
+              {c.combos.filter((k) => k.sign > 0).map((k) => <span key={k.id} className="combo">+ {t(k.label as Key)}</span>)}
+              {c.combos.filter((k) => k.sign < 0).map((k) => <span key={k.id} className="combo bad">− {t(k.label as Key)}</span>)}
+              {c.checks.filter((k) => k.status === 'unknown').slice(0, 1).map((k) => (
+                <span key={k.rule} className="unchecked">{t('card.unchecked', { years: (k.unknownYears ?? []).slice(0, 3).join(', ') })}</span>
+              ))}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="block" data-tone="stop" aria-labelledby="avoid">
+        <h3 id="avoid" className="block-title"><span aria-hidden="true">⛔</span> {t('card.avoid')}</h3>
+        {model.avoid.length ? (
+          <ul className="lines">
+            {model.avoid.map((a) => (
+              <li key={a.crop.id}>
+                {a.check.rule === 'EARLY_RETURN' && t('card.avoidReturn', { crop: cropName(a.crop), year: a.check.allowedFrom ?? '', last: a.check.lastYear ?? '' })}
+                {a.check.rule === 'MAX_IN_ROW' && t('card.avoidRepeat', { crop: cropName(a.crop), year: model.target })}
+                {a.check.rule === 'LATE_HARVEST' && t('card.avoidLate', { crop: cropName(a.crop) })}
+              </li>
+            ))}
+          </ul>
+        ) : <p className="muted">{t('card.nothingToAvoid', { year: model.target })}</p>}
+      </section>
+
+      {model.risks && (
+        <section className="block" data-tone="warn" aria-labelledby="risks">
+          <h3 id="risks" className="block-title"><span aria-hidden="true">⚠</span> {t('card.risks')} <span className="muted">· {cropName(model.risks.crop)}</span></h3>
+          {(() => {
+            const hits = model.risks.results.filter((r) => r.count > 0).sort((a, b) => b.count - a.count)
+            const years = model.risks.results[0]?.years ?? 0
+            return hits.length ? (
+              <ul className="lines">
+                {hits.map((r) => (
+                  <li key={r.id} className="risk">
+                    <span>{t('card.riskLine', { what: t(r.label as Key), count: r.count, years: r.years })}</span>
+                    <span className="dots" aria-hidden="true">
+                      {Array.from({ length: r.years }, (_, i) => <i key={i} data-on={i < r.count} />)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : <p className="muted">{t('card.noRisks', { years })}</p>
+          })()}
+        </section>
+      )}
+
+      {model.watch.length > 0 && (
+        <section className="block" data-tone="watch" aria-labelledby="watch">
+          <h3 id="watch" className="block-title"><span aria-hidden="true">◉</span> {t('card.watch')} <span className="muted">· {cropName(model.watch[0].crop)}</span></h3>
+          <ul className="lines">
+            {model.watch.map((w) => (
+              <li key={w.what}><span className="when">{dekadLabel(lang, w.start)}</span> {t(w.what as Key)}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  )
+}
