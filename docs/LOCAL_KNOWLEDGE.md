@@ -3,6 +3,15 @@
 Dictated by N on Sat 14 Nov 2026, 11:25. Ground truth from his own experience of fields near his
 village. No names of people, farms or villages. Feeds the rules review (task 2.7) and UT3.
 
+## Coverage of task 1.10
+
+| Asked in the plan | Status |
+|---|---|
+| Rotations actually used nearby | Partly: "after maize or sunflower a light crop"; no full chains |
+| Real harvest dates per crop | Given (below) |
+| Real sowing dates per crop | Not given yet |
+| Bad seasons (year + crop) | N declines: he cannot judge agronomists' mistakes from memory |
+
 ## Crops grown
 
 Most common nearby: wheat, soybean, maize, sunflower, sugar beet.

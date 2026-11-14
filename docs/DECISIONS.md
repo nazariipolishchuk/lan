@@ -12,6 +12,7 @@ Times are Europe/Kyiv.
 | Sat 14 Nov 11:15 | Restarted after memory fixes; tile 1 seasons take ≈ 1 min each, peak RSS 1.42 GB on the largest tile |
 | Sat 14 Nov 11:34 | An extra Python job on the VPS (Cherkasy extract) and the HLS worker were both OOM-killed; `run_all.sh` retried tile T36UVV with 2 workers and lost nothing. Rule: while HLS runs, no other Python jobs on the VPS — heavy side work goes to the laptop |
 | Sat 14 Nov 11:57 | Task 1.1 visual check: `docs/img/p1_chunk_557_848.png` (200 largest of 364 fields in chunk 557_848). The block of rectangular fields east of Cherkasy is clean; ragged small shapes at 49.25–49.30° N are clearings in the forest south of the city, i.e. likely FTW false fields (risk R3). Pick the showcase field outside such areas. Task 1.3: `status.json` advanced from 6 to 25 scenes in 40 s on tile T35UQP |
+| Sat 14 Nov 12:05 | Phone check at a real 390 px viewport (iframe has its own viewport; measured `innerWidth` 390, phone media query true, sheet 390 × 359 px at half height, no horizontal scroll, map canvas drawn, oblast name in Ukrainian): `docs/img/p1_phone_390_uk.png`. Headless Chrome screenshots did not work on this machine (the launcher hands off to the running browser) |
 | Sat 14 Nov 11:55 | CP1 reached: tapping a real Cherkasy field opens a card with its real area, soil and slope (history from fixtures only for the fixture fields); HLS job running |
 | Sat 14 Nov 11:17 | CP0 reached (G1–G4 filled, fixtures load, VPS reads HLS). 47 min behind schedule, inside the 60-minute cut rule |
 
