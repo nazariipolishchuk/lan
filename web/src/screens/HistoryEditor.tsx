@@ -1,12 +1,12 @@
 // S3 History editor (PLAN §5.4): one row per season with the satellite guess, its confidence and a crop picker.
 // Edits stay in this browser, show a farmer mark on the strip, and re-score everything at once.
+import { CropIcon } from './CropIcon'
 import type { CardModel } from '../engine/card'
 import type { CropId, HistClass } from '../engine/types'
 import { useT, type Key } from '../i18n'
 import { resetOverrides, setOverride } from '../state/persist'
 import { useStore } from '../state/store'
 import { CROP_ORDER, PanelHead, useCropName, type Loaded } from './common'
-import { ICON } from './FieldCard'
 
 const PICK: (CropId | 'fallow')[] = [...CROP_ORDER, 'fallow']
 
@@ -43,7 +43,7 @@ export function HistoryEditor({ data, card }: { data: Loaded; card: CardModel })
               <span className="he-year">{y}{y === locked ? <small> · {t('he.inGround')}</small> : null}</span>
               <span className="he-guess">
                 {overrides[y] ? <><span aria-hidden="true">🧑‍🌾</span> {overrides[y] === 'unknown' ? t('he.dontKnow') : name(overrides[y] as string)} <small className="muted">{t('he.you')}</small></>
-                  : <>{season?.crop ? <span aria-hidden="true">{ICON[data.crops.crops.find((c) => c.id === season.crop)?.icon ?? '']}</span> : null} {g.label} <small className="muted">{g.how}</small></>}
+                  : <>{season?.crop ? <CropIcon id={season.crop} size={18} /> : null} {g.label} <small className="muted">{g.how}</small></>}
               </span>
               <label className="sr-only" htmlFor={`he-${y}`}>{t('cmp.pick', { year: y })}</label>
               <select id={`he-${y}`} value={v} onChange={(e) => {

@@ -1,11 +1,11 @@
 // S4 Priorities and constraints (PLAN §5.5). Farm-wide, stored in this browser; every change re-scores at once.
+import { CropIcon } from './CropIcon'
 import { DEFAULT_PRIORITIES, type Priorities as P } from '../engine/prefs'
 import type { CropId } from '../engine/types'
 import { useT, type Key } from '../i18n'
 import { setPrefs } from '../state/persist'
 import { useStore } from '../state/store'
 import { CROP_ORDER, PanelHead, useCropName, type Loaded } from './common'
-import { ICON } from './FieldCard'
 
 export function Priorities({ data }: { data: Loaded }) {
   const t = useT()
@@ -15,7 +15,6 @@ export function Priorities({ data }: { data: Loaded }) {
   const name = useCropName(data.crops)
   const put = (p: P) => updateUser((d) => setPrefs(d, p))
   const toggle = (list: CropId[], id: CropId) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id])
-  const icon = (id: CropId) => ICON[data.crops.crops.find((c) => c.id === id)?.icon ?? '']
 
   return (
     <div className="editor prefs">
@@ -60,7 +59,7 @@ export function Priorities({ data }: { data: Loaded }) {
           <tbody>
             {CROP_ORDER.map((id) => (
               <tr key={id}>
-                <th scope="row"><span aria-hidden="true">{icon(id)}</span> {name(id)}</th>
+                <th scope="row"><CropIcon id={id} size={18} /> {name(id)}</th>
                 <td><input type="checkbox" aria-label={`${t('pr.market')}: ${name(id)}`} checked={prefs.sell[id] !== false}
                   onChange={(e) => put({ ...prefs, sell: { ...prefs.sell, [id]: e.target.checked } })} /></td>
                 <td><input type="checkbox" aria-label={`${t('pr.pin')}: ${name(id)}`} checked={prefs.pin.includes(id)}

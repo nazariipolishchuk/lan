@@ -5,6 +5,7 @@
 // link markers) in three separate rows so nothing overlaps; every control (pickers, chips, buttons)
 // lives in normal page flow below it. The scale fits the screen on desktop; on a phone each lane's
 // timeline scrolls sideways and opens at the plan.
+import { CropIcon, GroupIcon } from './CropIcon'
 import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { cropCalendar, dekadOf, sowingOpen } from '../engine/calendar'
 import type { CardModel } from '../engine/card'
@@ -22,7 +23,6 @@ import { setPlanSlot, type MySlot } from '../state/persist'
 import { useStore } from '../state/store'
 import { CROP_ORDER, ScenarioSwitch, StatBars, useCard, useCropName, useFieldData, useMsg, useSourceName, type Loaded } from './common'
 import { CropDetail } from './CropDetail'
-import { ICON } from './FieldCard'
 
 const PAST = 2 // past seasons shown before the plan
 const DK_MIN = 7 // pixels per dekad below which the timeline scrolls instead of shrinking
@@ -281,7 +281,7 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
                 {i > 0 && <span className="chain-link" data-tone={lk?.tone ?? 'none'} aria-hidden="true">{lk?.tone === 'good' ? '✔' : lk?.tone === 'bad' ? '✖' : '→'}</span>}
                 {p.sl.cover && <span className="chain-cover" title={t('cmp.cover')} aria-label={t('cmp.cover')}>🌱 {t('cmp.coverShort')}</span>}
                 <button type="button" className="chain-item" data-hard={!!p.ts?.hard} style={{ ['--c' as string]: p.c.colour }} onClick={() => onTile(p.c.id, p.sl.y)}>
-                  <small>{p.sl.y}</small> <span aria-hidden="true">{p.sl.locked ? '📌' : ICON[p.c.icon]}</span> {short(p.c.id)}{p.ts?.hard ? ' ✖' : ''}
+                  <small>{p.sl.y}</small> {p.sl.locked ? <span aria-hidden="true">📌</span> : <CropIcon id={p.c.id} size={16} />} {short(p.c.id)}{p.ts?.hard ? ' ✖' : ''}
                 </button>
               </li>
             )
@@ -303,7 +303,7 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
               return (
                 <span key={`p${p.y}`} className="ctile past" data-known={p.known}
                   style={{ left: b.from, width: b.to - b.from, ['--c' as string]: p.crop?.colour ?? 'var(--frost)' }} title={`${p.y}: ${p.full}`}>
-                  <span className="ctile-icon" aria-hidden="true">{p.crop ? ICON[p.crop.icon] : p.group === 'winter' ? '❄' : p.group === 'summer' ? '☀' : '?'}</span>
+                  <span className="ctile-icon" aria-hidden="true">{p.crop ? <CropIcon id={p.crop.id} size={18} /> : <GroupIcon group={p.group ?? null} size={16} />}</span>
                   <span className="ctile-name">{p.label}</span>
                 </span>
               )
@@ -321,7 +321,7 @@ function Lane({ lane, score, strategy, history, past, data, scale, onTile, child
                 <button key={p.sl.y} type="button" className="ctile" data-hard={!!p.ts?.hard} data-assumed={p.assumed}
                   style={{ left: b.from, width: b.to - b.from, ['--c' as string]: p.c.colour }}
                   onClick={() => onTile(p.c.id, p.sl.y)} title={label} aria-label={label}>
-                  <span className="ctile-icon" aria-hidden="true">{p.sl.locked ? '📌' : ICON[p.c.icon]}</span>
+                  <span className="ctile-icon" aria-hidden="true">{p.sl.locked ? '📌' : <CropIcon id={p.c.id} size={18} />}</span>
                   <span className="ctile-name" aria-hidden="true">{short(p.c.id)}</span>
                   {p.ts?.hard && <span className="ctile-bad" aria-hidden="true">✖</span>}
                 </button>

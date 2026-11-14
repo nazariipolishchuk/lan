@@ -161,9 +161,16 @@ export function Diverging({ values, labels, xLabel, words, unit }: {
     <figure className="chart">
       <Readout text={hover !== null ? `${xLabel(labels[hover])}: ${h === null ? '—' : `${h > 0 ? '+' : ''}${h.toFixed(2)} (${h >= 0 ? words.pos : words.neg})`}` : null} hint={unit} />
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={unit} onPointerLeave={() => setHover(null)}>
-        <text x={PAD.l} y={PAD.t + 8} className="xl">▲ {words.pos}</text>
-        <text x={PAD.l} y={PAD.t + ih - 2} className="xl">▼ {words.neg}</text>
+        {ticks(-m, m, 4).filter((v) => v !== 0).map((v) => (
+          <g key={v}>
+            <line x1={PAD.l} x2={W - PAD.r} y1={y(v)} y2={y(v)} className="grid" />
+            <text x={PAD.l - 4} y={y(v) + 3} textAnchor="end" className="xl">{v > 0 ? '+' : '−'}{Math.abs(v).toFixed(2)}</text>
+          </g>
+        ))}
+        <text x={W - PAD.r} y={PAD.t + 8} textAnchor="end" className="xl">▲ {words.pos}</text>
+        <text x={W - PAD.r} y={PAD.t + ih - 2} textAnchor="end" className="xl">▼ {words.neg}</text>
         <line x1={PAD.l} x2={W - PAD.r} y1={y(0)} y2={y(0)} className="zero" />
+        <text x={PAD.l - 4} y={y(0) + 3} textAnchor="end" className="xl">0</text>
         {values.map((v, i) => {
           const x = PAD.l + i * bw
           return (

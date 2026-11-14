@@ -1,4 +1,5 @@
 // S6 Crop tile detail (PLAN §5.7): why this crop here, its windows, risks as "x of N years", watch calendar, gaps, sources.
+import { CropIcon } from './CropIcon'
 import { cropCalendar } from '../engine/calendar'
 import type { CardModel } from '../engine/card'
 import { pairCombos } from '../engine/combos'
@@ -9,7 +10,6 @@ import { dekadEnd, dekadStart, watchList } from '../engine/watch'
 import { useT, type Key } from '../i18n'
 import { useStore, type EvidenceTab } from '../state/store'
 import { StatBars, useCropName, useSourceName, type Loaded } from './common'
-import { ICON } from './FieldCard'
 
 const TAB_OF: Record<HazardDef['variable'], EvidenceTab> = {
   rain: 'rain', balance: 'moisture', wet: 'moisture', et0: 'moisture', hot30: 'heat', hot35: 'heat', tmin: 'heat',
@@ -56,7 +56,7 @@ export function CropDetail({ data, card, crop, year, onClose, planned = [] }: Pr
     <div className="crop-detail">
       <header className="panel-head">
         <button type="button" className="back-btn" onClick={onClose} aria-label={t('card.close')}>←</button>
-        <h2 className="panel-title"><span aria-hidden="true">{ICON[c.icon]}</span> {t('crop.title', { crop: name(crop), year })}</h2>
+        <h2 className="panel-title"><span style={{ color: c.colour }}><CropIcon id={c.id} size={24} /></span> {t('crop.title', { crop: name(crop), year })}</h2>
       </header>
 
       <section className="block">
