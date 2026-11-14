@@ -122,7 +122,7 @@
       "id": "w_rape", "name": {"en": "Winter rapeseed", "uk": "Ріпак озимий"}, "icon": "rapeseed", "colour": "#e6e14a",
       "family": "brassicaceae", "type": "winter",
       "sowing": {"tempC": {"v": 17, "source": null}, "lengthDekads": {"v": 2, "source": null}},
-      "seasonDekads": {"v": 31, "source": null}, "harvestLengthDekads": {"v": 2, "source": null},
+      "seasonDekads": {"v": 29, "source": null}, "harvestLengthDekads": {"v": 2, "source": null},
       "gdd": null, "water": "medium", "rooting": "high", "fixesNitrogen": false, "residue": "medium",
       "returnGap": {"v": 3, "source": "kmu164"}, "maxInRow": null,
       "hazards": [

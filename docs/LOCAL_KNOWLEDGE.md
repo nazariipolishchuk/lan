@@ -7,10 +7,21 @@ village. No names of people, farms or villages. Feeds the rules review (task 2.7
 
 | Asked in the plan | Status |
 |---|---|
-| Rotations actually used nearby | Partly: "after maize or sunflower a light crop"; no full chains |
+| Rotations actually used nearby | Partly: "after maize or sunflower a light crop". N does not know full chains (he does not track fields); final |
 | Real harvest dates per crop | Given (below) |
-| Real sowing dates per crop | Not given yet |
+| Real sowing dates per crop | Winter crops: "somewhere in October, almost right after the harvest is fully finished" (14 Nov, 12:15). No exact dates; spring crops not given; final |
 | Bad seasons (year + crop) | N declines: he cannot judge agronomists' mistakes from memory |
+
+## Sowing
+
+Winter crops are sown in October, almost immediately after the harvest is fully finished. N does
+not track exact dates.
+
+Check against the engine (climate-derived calendar, cell `49.5_31.875`, test
+`web/src/engine/realdata.test.ts`): winter wheat late September – mid October, winter barley early –
+mid October. **Agrees.** Harvest of cereals in July, sugar beet September–October: agrees with the
+harvest notes below. Rapeseed harvest came out in August; real rapeseed is threshed in early July,
+before wheat, so its season length was corrected from 31 to 29 dekads (unsourced, review in 2.7).
 
 ## Crops grown
 
