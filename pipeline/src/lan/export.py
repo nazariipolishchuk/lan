@@ -103,23 +103,39 @@ def last_code(items: list[dict] | None) -> int:
     return -1
 
 
-def write_geojsonseq(fields, path: Path, hist: dict | None = None) -> None:
-    """One feature per line for tippecanoe; k = last confident class code (−1 unknown), rh = rotation health (−1)."""
+LAST_GROUPS = ["winter", "summer", "uncultivated"]
+
+
+def last_group(items: list[dict] | None) -> int:
+    """Group of the latest season (index in LAST_GROUPS) where the group model is confident, −1 otherwise."""
+    if not items:
+        return -1
+    last = max(items, key=lambda it: it["y"])
+    return LAST_GROUPS.index(last["g"]) if last.get("g") in LAST_GROUPS else -1
+
+
+def write_geojsonseq(fields, path: Path, hist: dict | None = None, scores: dict | None = None) -> None:
+    """One feature per line for tippecanoe; k = last confident class code (−1 unknown), lg = group of the latest
+    season (0 winter, 1 summer, 2 uncultivated, −1 unknown), rh = rotation health
+    0–100 (−1 unknown), dr = drought years out of the last 20 for the field's climate cell (−1 unknown).
+    `scores` (id → {"rh", "dr"}) comes from web/scripts/batch-score.ts."""
     import shapely
 
-    hist = hist or {}
+    hist, scores = hist or {}, scores or {}
     with path.open("w", encoding="utf-8") as fh:
         for r, geom in zip(fields.itertuples(index=False), fields.geometry):
             f = FLAG_BITS["small"] if r.small else 0
             h = hist.get(r.id)
             if not h:
                 f |= FLAG_BITS["no_history"]
-            props = {"id": r.id, "ck": r.ck, "ha": round(float(r.ha), 1), "k": last_code(h), "rh": -1, "f": f}
+            sc = scores.get(r.id) or {}
+            props = {"id": r.id, "ck": r.ck, "ha": round(float(r.ha), 1), "k": last_code(h), "lg": last_group(h),
+                     "rh": sc.get("rh", -1), "dr": sc.get("dr", -1), "f": f}
             fh.write(json.dumps({"type": "Feature", "properties": props,
                                  "geometry": json.loads(shapely.to_geojson(shapely.set_precision(geom, 1e-6)))}) + "\n")
 
 
-def write_meta(out_dir: Path, history_tiles: list[str], accuracy=None) -> None:
+def write_meta(out_dir: Path, history_tiles: list[str], accuracy=None, oblasts: dict | None = None) -> None:
     sources = [
         {"id": "hls_vi", "name": "NASA HLS Vegetation Indices", "version": "2.0", "licence": "NASA open data"},
         {"id": "power", "name": "NASA POWER daily (MERRA-2)", "version": "v2", "licence": "NASA open data"},
@@ -130,6 +146,8 @@ def write_meta(out_dir: Path, history_tiles: list[str], accuracy=None) -> None:
     ]
     meta = {"v": 1, "built": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             "coverage": {"historyTiles": history_tiles, "climateOnly": False}, "accuracy": accuracy, "sources": sources}
+    if oblasts:
+        meta["oblasts"] = oblasts
     (out_dir / "meta.json").write_text(json.dumps(meta, indent=1), encoding="utf-8")
 
 

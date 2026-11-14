@@ -201,10 +201,36 @@ def run(work: Path, ua_test_tiles: set[str], rr_test_tiles: set[str]) -> dict:
     # final models on everything; the crop model reads curves relative to each year's summer green-up
     mg_all = fit(_mask_prev(tr_ua[FEATS]), tr_ua["group"], GROUPS, balanced=False)
     mc_all = fit(rr_x, rr["crop"], CROPS)
+    save_models(work / "models.pkl", mg_all, mc_all)
 
-    g, pg_all = predict(mg_all, ua[FEATS], GROUPS)
+    hist = predict_history(cur, mg_all, mc_all)
+    hist.to_parquet(work / "history.parquet", index=False)
+    print("predicted classes (all field-years):", hist["k"].value_counts().to_dict(), flush=True)
+
+    metrics = {"group": m_group, "crop": m_crop, "greenupLagDekads": lag, "minValidDekads": MIN_VALID,
+               "fieldYearsPredicted": int(len(hist))}
+    return metrics
+
+
+def save_models(path: Path, mg, mc) -> None:
+    import pickle
+
+    path.write_bytes(pickle.dumps({"group": mg, "crop": mc}))
+
+
+def load_models(path: Path):
+    import pickle
+
+    m = pickle.loads(path.read_bytes())  # our own file, written by save_models
+    return m["group"], m["crop"]
+
+
+def predict_history(cur: pd.DataFrame, mg, mc) -> pd.DataFrame:
+    """Curves (id, y, d…) → history rows (id, y, g, pg, crop, pc, n_valid, k, p)."""
+    ua = features(cur)
+    g, pg_all = predict(mg, ua[FEATS], GROUPS)
     ua_x = crop_features(ua, year_ref(ua, pd.Series(g == "summer", index=ua.index)))
-    k, pc_all = predict(mc_all, ua_x, CROPS)
+    k, pc_all = predict(mc, ua_x, CROPS)
     p_group = pg_all.max(1)
     p_summer = pg_all[:, GROUPS.index("summer")]
     hist = pd.DataFrame({"id": ua["id"], "y": ua["y"], "g": g, "pg": p_group.round(3),
@@ -216,12 +242,7 @@ def run(work: Path, ua_test_tiles: set[str], rr_test_tiles: set[str]) -> dict:
     hist["p"] = np.where(hist.g == "summer", np.minimum(p_summer * pc_all.max(1), HINT_CAP), p_group).round(3)
     unknown = hist["n_valid"] < MIN_VALID
     hist.loc[unknown, ["k", "p"]] = ["unknown", 0.0]
-    hist.to_parquet(work / "history.parquet", index=False)
-    print("predicted classes (all field-years):", hist["k"].value_counts().to_dict(), flush=True)
-
-    metrics = {"group": m_group, "crop": m_crop, "greenupLagDekads": lag, "minValidDekads": MIN_VALID,
-               "fieldYearsPredicted": int(len(hist))}
-    return metrics
+    return hist
 
 
 def build_rr_curves(work: Path) -> pd.DataFrame:

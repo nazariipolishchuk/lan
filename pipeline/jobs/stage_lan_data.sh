@@ -14,6 +14,9 @@ for d in climate curves fields tiles; do
   cp -r "$root/data/out/$d" "$dst/$d"
 done
 cp "$root/data/out/meta.json" "$dst/meta.json"
+for f in oblasts.json places.json.gz; do
+  [ -f "$root/data/out/$f" ] && cp "$root/data/out/$f" "$dst/$f"
+done
 touch "$dst/.nojekyll"
 cat > "$dst/README.md" <<'EOF'
 # lan-data
@@ -28,6 +31,8 @@ Served by GitHub Pages at `/lan-data/`; the app's code is in the `lan` repositor
 | `curves/` | Greenness curves per field and season | NASA HLS Vegetation Indices |
 | `climate/` | Climate indicators per cell | NASA POWER |
 | `meta.json` | Build date, coverage, measured accuracy, sources | — |
+| `oblasts.json` | Oblast outlines with map layers summarised | geoBoundaries gbOpen (OpenStreetMap, ODbL 1.0) |
+| `places.json.gz` | Settlement names for the search | GeoNames (CC-BY-4.0) |
 
 Crop history is a satellite estimate, not a record. Licences of every source: `docs/REFERENCES.md` in `lan`.
 EOF

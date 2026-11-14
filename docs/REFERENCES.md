@@ -20,6 +20,8 @@ same commit that introduces the thing (hackathon rule: list all data, resources 
 | `local_n` | Local practice in Cherkasy oblast, confirmed by the team's domain expert (N) in the rules review on 14 Nov 2026 (`docs/LOCAL_KNOWLEDGE.md`) | Predecessor effects, combos and anti-combos, shared-host groups | Team knowledge, no third-party material | `docs/LOCAL_KNOWLEDGE.md` |
 | `csb` | USDA NASS Crop Sequence Boundaries 2023, fiboa edition on Source Cooperative (Red River Valley subset: Fargo – Grand Forks, both banks) | Crop labels for the crop model and its validation on a held-out MGRS tile | Public domain (U.S. Government work) | https://source.coop/fiboa/us-usda-cropland |
 | `ukrstat_ck` | Main Department of Statistics in Cherkasy oblast: grain maize harvest 2021 (harvested area 347,801 ha) | Plausibility check of predicted crop shares only | Official statistics, facts cited | https://www.ck.ukrstat.gov.ua/source/arch/2022/vurobsg_kuk_21.pdf |
+| `geoboundaries` | geoBoundaries gbOpen UKR ADM1, simplified (Runfola et al. 2020; OpenStreetMap / Wambacher 2017) | Oblast outlines for the small-scale map layer and the coverage map | ODbL 1.0 | https://www.geoboundaries.org |
+| `geonames` | GeoNames Ukraine dump (UA.zip) and admin1 codes | Village and town search in English and Ukrainian | CC-BY-4.0 | https://download.geonames.org/export/dump/ |
 
 ## Software
 
