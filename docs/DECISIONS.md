@@ -11,6 +11,7 @@ Times are Europe/Kyiv.
 | Sat 14 Nov 11:10 | HLS job started on the VPS for tiles 1–40 (Cherkasy first); died at once: tile 1 (18,342 fields) hit the OOM killer |
 | Sat 14 Nov 11:15 | Restarted after memory fixes; tile 1 seasons take ≈ 1 min each, peak RSS 1.42 GB on the largest tile |
 | Sat 14 Nov 11:34 | An extra Python job on the VPS (Cherkasy extract) and the HLS worker were both OOM-killed; `run_all.sh` retried tile T36UVV with 2 workers and lost nothing. Rule: while HLS runs, no other Python jobs on the VPS — heavy side work goes to the laptop |
+| Sat 14 Nov 11:57 | Task 1.1 visual check: `docs/img/p1_chunk_557_848.png` (200 largest of 364 fields in chunk 557_848). The block of rectangular fields east of Cherkasy is clean; ragged small shapes at 49.25–49.30° N are clearings in the forest south of the city, i.e. likely FTW false fields (risk R3). Pick the showcase field outside such areas. Task 1.3: `status.json` advanced from 6 to 25 scenes in 40 s on tile T35UQP |
 | Sat 14 Nov 11:55 | CP1 reached: tapping a real Cherkasy field opens a card with its real area, soil and slope (history from fixtures only for the fixture fields); HLS job running |
 | Sat 14 Nov 11:17 | CP0 reached (G1–G4 filled, fixtures load, VPS reads HLS). 47 min behind schedule, inside the 60-minute cut rule |
 
@@ -40,7 +41,7 @@ Times are Europe/Kyiv.
 | Admin boundaries | geoBoundaries gbOpen UKR ADM1: 27 units (includes Crimea and Sevastopol), source OSM/Wambacher 2017, ODbL 1.0 |
 | Basemap | EOX Sentinel-2 cloudless 2024 WMTS tile → 200, CORS reflects the origin. Licence of 2018+ editions is CC BY-NC-SA 4.0 (non-commercial; fine for the hackathon), attribution "Sentinel-2 cloudless by EOX IT Services GmbH (contains modified Copernicus Sentinel data)" |
 | Terms and Conditions | Read in Chrome (2026 Participant T&C, updated 7 Aug 2026). (1) Our original content must be freely available or under an OSI licence; if none is named NASA uses Apache-2.0 → **we pick MIT** (O10). (2) Non-NASA materials must be "freely and publicly available without restriction" or OSI-licensed, each licence listed in our documentation; every source must be cited, or awards can be removed. (3) No PII, no recognisable names, voices or likenesses of people under 18; adults shown must agree to NASA's use. (4) Video: our own work, no third-party copyrighted elements; US government gets a perpetual licence to it. (5) No material that promotes commercial services or products |
-| SMAP order (0.7) | Not placed yet; moved to P1 |
+| SMAP order (0.7) | **Placed 11:58 via NASA Harmony** (accepts the Earthdata token, no web form needed): SPL3SMP_E v006 (`C2938664763-NSIDC_CPRD`), variable `Soil_Moisture_Retrieval_Data_AM/soil_moisture`, Ukraine bbox, 2015-04-01 → 2026-11-12, NetCDF4. 4,166 input granules; auto-paused after preview and resumed; status `running`. Job id in `data/work/smap_job.json`; results expire 14 Dec 2026 |
 
 ## Forks and cuts
 
