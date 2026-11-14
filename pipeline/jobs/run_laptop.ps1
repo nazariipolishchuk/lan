@@ -12,16 +12,22 @@
 #   $env:LAN_VPS = 'user@host'; $env:LAN_VPS_KEY = 'C:\path\to\key'
 #   powershell -ExecutionPolicy Bypass -File pipeline\jobs\run_laptop.ps1 [-From 41] [-To 90] [-Workers 4] [-Lanes 4]
 # Without -Lane the script clears old claims and opens -Lanes windows; with -Lane N it is one lane.
-param([int]$From = 41, [int]$To = 90, [int]$Workers = 4, [int]$Lanes = 4, [int]$Lane = 0)
+#   USA: -Region us -Years 2026 -From 1 -To 784   (tiles_us.txt, work/fields_us, work/ndvi_us)
+param([int]$From = 41, [int]$To = 90, [int]$Workers = 4, [int]$Lanes = 4, [int]$Lane = 0,
+      [string]$Region = 'ua', [string]$Years = '2026,2025,2024,2023,2022,2021,2020,2019,2018,2017,2016')
 
 $ErrorActionPreference = 'Continue'
 Set-Location (Join-Path $PSScriptRoot '..')
 $env:LAN_LOGS_DIR = (Resolve-Path '..\data\logs').Path
-$ndvi = (Resolve-Path '..\data\work\ndvi').Path
-$claims = Join-Path $env:LAN_LOGS_DIR 'claims'
-$log = Join-Path $env:LAN_LOGS_DIR 'run_laptop.log'
-$tiles = Get-Content (Join-Path $env:LAN_LOGS_DIR 'tiles.txt') | ForEach-Object { ($_ -split ' ')[0] }
-$years = 2026..2016
+$sfx = if ($Region -eq 'us') { '_us' } else { '' }
+New-Item -ItemType Directory -Force -Path "..\data\work\ndvi$sfx" | Out-Null
+$ndvi = (Resolve-Path "..\data\work\ndvi$sfx").Path
+$fieldsDir = (Resolve-Path "..\data\work\fields$sfx").Path
+$claims = Join-Path $env:LAN_LOGS_DIR "claims$sfx"
+$log = Join-Path $env:LAN_LOGS_DIR "run_laptop$sfx.log"
+$tiles = Get-Content (Join-Path $env:LAN_LOGS_DIR "tiles$sfx.txt") | ForEach-Object { ($_ -split ' ')[0] }
+$years = $Years -split ',' | ForEach-Object { [int]$_ }
+$vpsNdvi = "lan/data/work/ndvi$sfx/"
 $vps = $env:LAN_VPS
 $sshArgs = @('-i', $env:LAN_VPS_KEY, '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20',
              '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=4')
@@ -34,13 +40,13 @@ if ($Lane -eq 0) {
   New-Item -ItemType Directory -Force -Path $claims | Out-Null
   for ($i = 1; $i -le $Lanes; $i++) {
     Start-Process powershell -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-File', $PSCommandPath,
-      '-From', $From, '-To', $To, '-Workers', $Workers, '-Lane', $i)
+      '-From', $From, '-To', $To, '-Workers', $Workers, '-Lane', $i, '-Region', $Region, '-Years', $Years)
     Start-Sleep -Seconds 3
   }
   exit 0
 }
 
-$host.UI.RawUI.WindowTitle = "Lan HLS (laptop) lane $Lane, tiles $To down to $From"
+$host.UI.RawUI.WindowTitle = "Lan HLS $Region lane $Lane, tiles $To down to $From"
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 function Say([string]$msg) {
   $line = "$(Get-Date -Format s) lane $Lane $msg"; Write-Host $line
@@ -56,7 +62,7 @@ function VpsStarted([string]$tile) {
 
 function PushMarkers([string]$tile) {
   $ok = Get-ChildItem -Path $ndvi -Filter "${tile}_*.ok" | ForEach-Object { $_.FullName }
-  if ($ok) { & scp @sshArgs -q @ok "${vps}:lan/data/work/ndvi/" 2>$null; return $LASTEXITCODE -eq 0 }
+  if ($ok) { & scp @sshArgs -q @ok "${vps}:$vpsNdvi" 2>$null; return $LASTEXITCODE -eq 0 }
   return $false
 }
 
@@ -66,7 +72,7 @@ function Claim([string]$tile) {
 
 function RunTile([string]$tile, [int]$w) {
   # each lane appends its JSON lines through .NET (UTF-8), so parallel lanes do not garble the log
-  & uv run -q python jobs/run_tile.py $tile @years --workers $w 2>&1 | ForEach-Object {
+  & uv run -q python jobs/run_tile.py $tile @years --workers $w --fields $fieldsDir --out $ndvi 2>&1 | ForEach-Object {
     $s = "$_"; Write-Host $s; [System.IO.File]::AppendAllText($log, "$s`r`n", $utf8) }
   return $LASTEXITCODE
 }

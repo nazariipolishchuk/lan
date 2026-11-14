@@ -179,7 +179,7 @@ export function MapView() {
       <div ref={el} className="map" role="application" aria-label={t('map.label')} />
       {zoom < FIELDS_MIN_ZOOM && <div className="map-hint">{t('map.zoomIn')}</div>}
       {tip && (
-        <div className="map-tip" style={{ left: tip.x + 14, top: tip.y + 14 }}>
+        <div className="map-tip" style={tipPosition(tip, el.current)}>
           {nf(tip.ha)} {t('card.ha')}
           {mapLayer === 'last' && <> · {t(LG_LABEL[tip.lg] ?? 'layer.unknown')}</>}
           {mapLayer === 'drought' && <> · {tip.dr >= 0 ? t('layer.droughtTip', { n: tip.dr }) : t('layer.unknown')}</>}
@@ -188,6 +188,18 @@ export function MapView() {
       )}
     </div>
   )
+}
+
+/** Tooltip beside the cursor, flipped to the other side near the right or bottom edge so it never leaves the map. */
+function tipPosition(tip: Tip, box: HTMLElement | null): React.CSSProperties {
+  const w = box?.clientWidth ?? window.innerWidth
+  const h = box?.clientHeight ?? window.innerHeight
+  const right = tip.x > w - 240
+  const bottom = tip.y > h - 60
+  return {
+    ...(right ? { right: w - tip.x + 14 } : { left: tip.x + 14 }),
+    ...(bottom ? { bottom: h - tip.y + 14 } : { top: tip.y + 14 }),
+  }
 }
 
 const LG_LABEL: Record<number, Key> = { 0: 'layer.winter', 1: 'layer.summer', 2: 'layer.fallow' }
