@@ -74,17 +74,24 @@ def erode_labels(labels: np.ndarray) -> np.ndarray:
 
 
 class ZonalIndex:
-    """Pixel positions of all fields in a tile, computed once; each scene then touches only those pixels."""
+    """Pixel positions of all fields in a tile, computed once; each scene then touches only those pixels.
+
+    Memory matters (the VPS has 1.9 GiB for 2–3 parallel scenes): interior labels are kept for every
+    field pixel, full labels only for the pixels of fields too small to have an interior.
+    """
 
     def __init__(self, inner: np.ndarray, labels: np.ndarray, n: int):
         self.shape = labels.shape
         self.n = n
         self.sel = np.flatnonzero(labels.ravel() > 0)
-        self.lab_all = labels.ravel()[self.sel]
+        lab_all = labels.ravel()[self.sel]
         self.lab_in = inner.ravel()[self.sel]
-        self.total_all = np.bincount(self.lab_all, minlength=n + 1)[: n + 1]
+        self.total_all = np.bincount(lab_all, minlength=n + 1)[: n + 1]
         self.total_in = np.bincount(self.lab_in, minlength=n + 1)[: n + 1]
         self.small = self.total_in < MIN_INNER_PIXELS  # these fields use all of their pixels
+        self.small[0] = False
+        self.small_sel = np.flatnonzero(self.small[lab_all])  # positions within `sel`
+        self.lab_small = lab_all[self.small_sel]
 
     def take(self, raster: np.ndarray) -> np.ndarray:
         return raster.ravel()[self.sel]
@@ -92,18 +99,19 @@ class ZonalIndex:
     def means(self, values: np.ndarray, valid: np.ndarray):
         """`values` and `valid` are already restricted with `take`. Returns mean, valid count, total count."""
         n = self.n
-        w = np.where(valid, values, 0).astype(np.float64)
-        lab_in = np.where(valid, self.lab_in, 0)
-        lab_all = np.where(valid, self.lab_all, 0)
-        s_in = np.bincount(lab_in, weights=w, minlength=n + 1)[: n + 1]
-        c_in = np.bincount(lab_in, minlength=n + 1)[: n + 1]
-        s, c, t = s_in, c_in, self.total_in
-        if self.small.any():
-            s_all = np.bincount(lab_all, weights=w, minlength=n + 1)[: n + 1]
-            c_all = np.bincount(lab_all, minlength=n + 1)[: n + 1]
-            s = np.where(self.small, s_all, s_in)
-            c = np.where(self.small, c_all, c_in)
-            t = np.where(self.small, self.total_all, self.total_in)
+        li = self.lab_in[valid]
+        s = np.bincount(li, weights=values[valid], minlength=n + 1)[: n + 1]
+        c = np.bincount(li, minlength=n + 1)[: n + 1]
+        del li
+        t = self.total_in.copy()
+        if self.small_sel.size:
+            vs = valid[self.small_sel]
+            ls = self.lab_small[vs]
+            s_small = np.bincount(ls, weights=values[self.small_sel][vs], minlength=n + 1)[: n + 1]
+            c_small = np.bincount(ls, minlength=n + 1)[: n + 1]
+            s = np.where(self.small, s_small, s)
+            c = np.where(self.small, c_small, c)
+            t = np.where(self.small, self.total_all, t)
         with np.errstate(invalid="ignore", divide="ignore"):
             mean = np.where(c > 0, s / np.maximum(c, 1), np.nan)
         mean[0] = np.nan
@@ -251,18 +259,27 @@ def run_tile_year(tile: str, year: int, fields_loader, out_dir: Path, workers: i
 
     def work(s):
         a = _get(session, s["ndvi"])
-        b = _get(session, s["fmask"])
+        nbytes = len(a)
         ndvi, _, nodata = _read(a)
+        del a
         nd = zi.take(ndvi)
         del ndvi
+        b = _get(session, s["fmask"])
+        nbytes += len(b)
         fmask, _, _ = _read(b)
+        del b
         fm = zi.take(fmask)
         del fmask
         valid = valid_mask(fm, nd, nodata)
-        mean, nvalid, ntotal = zi.means(nd.astype(np.float32) * NDVI_SCALE, valid)
+        del fm
+        vals = nd.astype(np.float32)
+        del nd
+        vals *= NDVI_SCALE
+        mean, nvalid, ntotal = zi.means(vals, valid)
+        del vals, valid
         frac = np.where(ntotal > 0, nvalid / np.maximum(ntotal, 1), 0.0)
         keep = np.nonzero(frac[1:] >= MIN_VALID_FRAC)[0] + 1
-        return s, len(a) + len(b), keep, mean[keep], frac[keep]
+        return s, nbytes, keep, mean[keep], frac[keep]
 
     rows = []
     with ThreadPoolExecutor(max_workers=workers) as pool:

@@ -8,7 +8,8 @@ Times are Europe/Kyiv.
 | When | Event |
 |---|---|
 | Sat 14 Nov 10:35 | P0 started (planned 09:00). 95 min behind the §9 schedule from the start. |
-| Sat 14 Nov 11:10 | HLS job started on the VPS for tiles 1–40 (Cherkasy first) |
+| Sat 14 Nov 11:10 | HLS job started on the VPS for tiles 1–40 (Cherkasy first); died at once: tile 1 (18,342 fields) hit the OOM killer |
+| Sat 14 Nov 11:15 | Restarted after memory fixes; tile 1 seasons take ≈ 1 min each, peak RSS 1.42 GB on the largest tile |
 | Sat 14 Nov 11:25 | CP0 reached (G1–G4 filled, fixtures load, VPS reads HLS). 55 min behind schedule, inside the 60-minute cut rule |
 
 ## Gates
@@ -50,4 +51,5 @@ Times are Europe/Kyiv.
 | Sat 11:00 | **Own field ids.** FTW ids repeat across its processing chunks (598,088 Ukrainian fields ≥ 1 ha, only 351,295 distinct FTW ids). Our id = 10 base36 characters from the centroid at ~1 m; FTW's id kept as `ftw_id`. 288 polygons sit in two FTW partitions on oblast borders; the loader keeps one | Unique, stable, short ids are required by the contract |
 | Sat 11:00 | Fields are stored as 16 parquet parts in `work/fields/`, built in subprocesses; readers go row group by row group; zonal statistics touch only field pixels | The VPS has 1.9 GiB RAM; three earlier attempts were killed by the OOM killer at 1.75 GB |
 | Sat 11:00 | Fields ≥ 1 ha in Ukraine (FTW 2025): 598,088, ≈ 31 M ha (Ukraine's arable land ≈ 32.7 M ha); Cherkasy 29,214 fields, 1.24 M ha | Measured |
+| Sat 11:15 | HLS memory: per-scene arrays freed early, interior labels only (full labels just for fields without an interior), `MALLOC_ARENA_MAX=2`, `MALLOC_MMAP_THRESHOLD_=1048576`, `GDAL_CACHEMAX=64`; child processes get `< /dev/null` so they cannot eat the tile list. Peak on T36UUV: 1.66 GB → 1.42 GB. A crashed tile is retried with 2 workers | VPS has 1.9 GiB |
 | Sat 11:20 | HLS budget: a full run averages **17.5 MB per scene** (454 MB / 26 scenes on T36UVV; the 5.6 MB probe was a partial-coverage scene). 990 tile-seasons × ≈ 450 MB ≈ 450 GB of traffic, inside the 3 TiB monthly allowance; nothing large stays on disk | Measured in the G2 run |
