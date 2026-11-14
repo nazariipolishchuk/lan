@@ -40,7 +40,7 @@ Update this table at every checkpoint. It is the single source of truth after a 
 | P0 Bootstrap and gates | Sat 09:00–10:30 | Repo, environments, measured facts, frozen data contract | ☑ 11:17 (SMAP order open; T&C read; team confirmed) |
 | P1 Data foundation + app shell | Sat 10:30–14:00 | Real fields on the map, climate for Ukraine, card on fixtures | ☑ 11:55 (Cherkasy only for soil/terrain/tiles; local-knowledge sheet done) |
 | P2 Engine + history | Sat 14:00–18:00 | Card is real end to end in the deep zone | ☑ 16:19 (history at group level, crop names as hints; rules reviewed by N) |
-| P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☐ |
+| P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☑ 17:50 (live https://nazariipolishchuk.github.io/lan/; phone check, project-page draft and T's bug pass are with N/T) |
 | P4 Expansion + polish I | Sat 22:00–02:00 | Night run started, layers, search, About, mobile | ☐ |
 | Night | Sun 02:00–08:00 | VPS processes the rest of Ukraine; people sleep | ☐ |
 | P5 Ingest + human validation | Sun 08:00–11:00 | Wider coverage live; validation numbers; bug list | ☐ |
@@ -55,7 +55,7 @@ Update this table at every checkpoint. It is the single source of truth after a 
 | G2 | P0 | HLS throughput: how many tiles can the night run finish by Sun 07:00? | ☑ ~1 min per tile-season; all 90 tiles by morning if run overnight |
 | G3 | P0 | Crop labels for Ukraine: Path A (KPI crop maps) or Path B (no local labels)? | ☑ Path B+ (KPI winter/summer maps 2019–2024 + CSB-trained classifier) |
 | G4 | P0 | Can the laptop fetch over HTTPS from Python and Node, or does all fetching go through the VPS? | ☑ yes (except sites with broken chains) |
-| G5 | P3 | Does GitHub Pages serve PMTiles with HTTP Range requests? | ☐ |
+| G5 | P3 | Does GitHub Pages serve PMTiles with HTTP Range requests? | ☑ yes, 206 Partial Content; the live map draws from it |
 
 **How N drives the work:** one message per phase, for example
 `/goal Execute phase P1 of docs/PLAN.md`. Approvals needed are listed in §15.
