@@ -40,7 +40,7 @@ Update this table at every checkpoint. It is the single source of truth after a 
 | P0 Bootstrap and gates | Sat 09:00–10:30 | Repo, environments, measured facts, frozen data contract | ☑ 11:17 (SMAP order open; T&C read; team confirmed) |
 | P1 Data foundation + app shell | Sat 10:30–14:00 | Real fields on the map, climate for Ukraine, card on fixtures | ☑ 11:55 (Cherkasy only for soil/terrain/tiles; local-knowledge sheet done) |
 | P2 Engine + history | Sat 14:00–18:00 | Card is real end to end in the deep zone | ☑ 16:19 (history at group level, crop names as hints; rules reviewed by N) |
-| P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☑ 17:50 (live https://nazariipolishchuk.github.io/lan/; phone check, project-page draft and T's bug pass are with N/T) |
+| P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☑ 17:50, closed by N ~19:30 (live https://nazariipolishchuk.github.io/lan/; compare layout reworked after N's review; project-page draft in `docs/SUBMISSION_DRAFT.md`; T's bug pass moved to P4/P5) |
 | P4 Expansion + polish I | Sat 22:00–02:00 | Night run started, layers, search, About, mobile | ☐ |
 | Night | Sun 02:00–08:00 | VPS processes the rest of Ukraine; people sleep | ☐ |
 | P5 Ingest + human validation | Sun 08:00–11:00 | Wider coverage live; validation numbers; bug list | ☐ |
@@ -1025,19 +1025,20 @@ Web track (laptop, in parallel, on fixtures):
 **3.6 Deploy** — needs N's yes (§15): create `lan` and `lan-data`, push, enable Pages.
 - [ ] Verify the live URL in a private window and on a phone over mobile data.
 - [ ] **G5:** request a byte range of a tiles file from Pages; confirm a partial response and that the map draws. If not: export a tile directory for the deep zone instead.
-**3.7** N: saves the project-page draft; optionally files the FortiGuard web-filter classification for the site URL.
-**3.8** T (22:00–23:00): first pass on the live link → `docs/BUGS.md`.
+**3.7** ☑ Draft texts for every project-page field: `docs/SUBMISSION_DRAFT.md` (links filled at P7/P8). FortiGuard skipped: the site is on `github.io`, an already classified domain.
+**3.8** T: first pass on the live link → `docs/BUGS.md` (not done at P3; moved to P4/P5, whenever T is free).
 
 **CP3 (22:00) = L0:** a stranger with the link can tap the demo field on a phone and compare three rotations.
 
 ### P4 — Expansion and polish I (Sat 22:00–02:00)
 
+**4.0 All-Ukraine history tonight (N, 14 Nov; moved forward from 5.1):** as soon as the shared HLS queue finishes (forecast 22:00–23:00), pull the VPS `ndvi` to the laptop, rebuild curves, predict, export, stage `lan-data` and push it (pushes allowed until the deadline). Verify a field in a newly processed oblast opens with history.
 **4.1 Night run** — needs N's yes: all remaining tiles in the G2 order, in tmux, with watchdog and `status.json`. Verify at 23:00 and 01:30 that it advances.
 **4.2 Layers**: last crop, drought risk, rotation health (`web/scripts/batch-score.ts`); oblast shading at low zoom.
 **4.3 Search and locate** (`map/search.ts`): settlement index in both languages. Test: `test_search_finds_cyrillic_and_latin`.
 **4.4 About page**: all sections of §5.8; accuracy numbers read from `meta.json`.
 **4.5 Phone pass** at 360 × 740 and 390 × 844: bottom sheet heights, lane scrolling, tap targets of at least 44 px.
-**4.6 Intro and demo tour.**
+**4.6 Intro and demo tour — option B (N, 14 Nov):** one intro screen (S0) + a 6–7 step tour on the demo field (history strip → sow next → avoid → risks → compare → combos → My plan), "Skip" on every step, replay from About; plus an ⓘ with a one-sentence explanation next to every block of the card and the comparison.
 **4.7 Insurance recording** (N with OBS, 5 minutes, around 00:30): a raw screen capture of at most 30 s of the working flow, kept locally in case Sunday goes wrong.
 
 **CP4 (02:00):** the night run is healthy; the site is deployed; people sleep.
