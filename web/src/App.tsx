@@ -8,6 +8,8 @@ export default function App() {
   const t = useT()
   const lang = useStore((s) => s.lang)
   const setLang = useStore((s) => s.setLang)
+  const theme = useStore((s) => s.theme)
+  const setTheme = useStore((s) => s.setTheme)
   const selectedId = useStore((s) => s.selectedId)
   const today = useStore((s) => s.today)
   const overridden = useStore((s) => s.dateOverridden)
@@ -33,6 +35,10 @@ export default function App() {
           <span className="date-chip" title={overridden ? t('top.dateOverride') : undefined} data-override={overridden}>
             {t('top.today')} {today.toLocaleDateString(lang === 'uk' ? 'uk-UA' : 'en-GB', { day: 'numeric', month: 'short' })}
           </span>
+          <button type="button" className="theme-btn" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            aria-label={theme === 'dark' ? t('top.themeLight') : t('top.themeDark')} title={theme === 'dark' ? t('top.themeLight') : t('top.themeDark')}>
+            <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
+          </button>
           <div className="lang" role="group" aria-label="Language">
             <button type="button" aria-pressed={lang === 'en'} onClick={() => setLang('en')}>EN</button>
             <button type="button" aria-pressed={lang === 'uk'} onClick={() => setLang('uk')}>UK</button>

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { loadClimate, loadCrops, loadField, loadRules } from '../data/loader'
 import { buildCard, type CardModel } from '../engine/card'
 import type { ClimateCell, CropDef, CropsFile, FieldRecord, HistClass, RulesFile } from '../engine/types'
 import { dekadLabel, useT, type Key } from '../i18n'
 import { oblastName } from '../i18n/oblasts'
-import { useStore } from '../state/store'
+import { useStore, type Sheet } from '../state/store'
 
 type Loaded = { field: FieldRecord; cell: ClimateCell; crops: CropsFile; rules: RulesFile }
 type Status = { kind: 'loading' } | { kind: 'missing' } | { kind: 'error' } | { kind: 'ok'; data: Loaded }
@@ -49,8 +49,7 @@ export function FieldCard({ id }: { id: string }) {
   return (
     <aside className="sheet" data-state={sheet} aria-label={t('card.field')}>
       <div className="sheet-bar">
-        <button type="button" className="sheet-handle" onClick={() => setSheet(sheet === 'full' ? 'half' : 'full')}
-          aria-label={sheet === 'full' ? t('card.collapse') : t('card.expand')} />
+        <SheetGrip sheet={sheet} setSheet={setSheet} label={t('card.resize')} />
         <button type="button" className="icon-btn" onClick={() => select(null)} aria-label={t('card.close')}>✕</button>
       </div>
       {status.kind === 'loading' && <div className="card-state" aria-busy="true"><span className="pulse" /></div>}
@@ -63,6 +62,44 @@ export function FieldCard({ id }: { id: string }) {
       )}
       {status.kind === 'ok' && <CardBody data={status.data} />}
     </aside>
+  )
+}
+
+const ORDER: Sheet[] = ['peek', 'half', 'full']
+
+/** The whole bar is the grip: swipe up or down to change height; a tap toggles half and full. */
+function SheetGrip({ sheet, setSheet, label }: { sheet: Sheet; setSheet: (s: Sheet) => void; label: string }) {
+  const start = useRef<number | null>(null)
+  const moved = useRef(false)
+  const step = (dir: 1 | -1) => setSheet(ORDER[Math.max(0, Math.min(2, ORDER.indexOf(sheet) + dir))])
+  return (
+    <button type="button" className="sheet-grip" aria-label={label} aria-expanded={sheet === 'full'}
+      onPointerDown={(e) => {
+        start.current = e.clientY
+        moved.current = false
+        e.currentTarget.setPointerCapture(e.pointerId)
+      }}
+      onPointerMove={(e) => {
+        if (start.current === null || moved.current) return
+        const dy = e.clientY - start.current
+        if (Math.abs(dy) > 28) {
+          moved.current = true
+          step(dy < 0 ? 1 : -1)
+        }
+      }}
+      onPointerUp={() => {
+        start.current = null
+      }}
+      onClick={() => {
+        if (moved.current) return
+        setSheet(sheet === 'full' ? 'half' : 'full')
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowUp') step(1)
+        if (e.key === 'ArrowDown') step(-1)
+      }}>
+      <span className="sheet-handle" aria-hidden="true" />
+    </button>
   )
 }
 
