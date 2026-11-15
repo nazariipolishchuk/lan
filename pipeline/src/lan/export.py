@@ -169,18 +169,31 @@ def write_geojsonseq(fields, path: Path, hist: dict | None = None, scores: dict 
                                  "geometry": json.loads(shapely.to_geojson(shapely.set_precision(geom, 1e-6)))}) + "\n")
 
 
-def write_meta(out_dir: Path, history_tiles: list[str], accuracy=None, oblasts: dict | None = None) -> None:
-    sources = [
-        {"id": "hls_vi", "name": "NASA HLS Vegetation Indices", "version": "2.0", "licence": "NASA open data"},
-        {"id": "power", "name": "NASA POWER daily (MERRA-2)", "version": "v2", "licence": "NASA open data"},
-        {"id": "nasadem", "name": "NASA NASADEM", "version": "001", "licence": "NASA open data"},
-        {"id": "ftw", "name": "Fields of The World, global field boundaries 2025", "version": "2026", "licence": "CC-BY-4.0"},
-        {"id": "soilgrids", "name": "ISRIC SoilGrids", "version": "2.0", "licence": "CC-BY-4.0"},
-        {"id": "kpi_wb", "name": "KPI winter/summer crop maps of Ukraine 2019–2024 (World Bank DDH 0066913)", "version": "2025", "licence": "CC-BY-4.0"},
-        {"id": "ua_cropmap_2020", "name": "10 m crop type map of Ukraine 2020 (Chen et al. 2024, Zenodo 11065080)", "version": "2024", "licence": "CC-BY-4.0"},
-        {"id": "geonames", "name": "GeoNames Ukraine dump and cities5000", "version": "—", "licence": "CC-BY-4.0"},
-        {"id": "geoboundaries", "name": "geoBoundaries gbOpen UKR ADM1 (Runfola et al. 2020; OpenStreetMap / Wambacher 2017)", "version": "—", "licence": "ODbL 1.0"},
-    ]
+SOURCES_UA = [
+    {"id": "hls_vi", "name": "NASA HLS Vegetation Indices", "version": "2.0", "licence": "NASA open data"},
+    {"id": "power", "name": "NASA POWER daily (MERRA-2)", "version": "v2", "licence": "NASA open data"},
+    {"id": "nasadem", "name": "NASA NASADEM", "version": "001", "licence": "NASA open data"},
+    {"id": "ftw", "name": "Fields of The World, global field boundaries 2025", "version": "2026", "licence": "CC-BY-4.0"},
+    {"id": "soilgrids", "name": "ISRIC SoilGrids", "version": "2.0", "licence": "CC-BY-4.0"},
+    {"id": "kpi_wb", "name": "KPI winter/summer crop maps of Ukraine 2019–2024 (World Bank DDH 0066913)", "version": "2025", "licence": "CC-BY-4.0"},
+    {"id": "ua_cropmap_2020", "name": "10 m crop type map of Ukraine 2020 (Chen et al. 2024, Zenodo 11065080)", "version": "2024", "licence": "CC-BY-4.0"},
+    {"id": "geonames", "name": "GeoNames Ukraine dump and cities5000", "version": "—", "licence": "CC-BY-4.0"},
+    {"id": "geoboundaries", "name": "geoBoundaries gbOpen UKR ADM1 (Runfola et al. 2020; OpenStreetMap / Wambacher 2017)", "version": "—", "licence": "ODbL 1.0"},
+]
+
+# USA: field outlines and the 2018–2025 crop history are USDA's own records (no FTW, no KPI maps)
+SOURCES_US = [
+    {"id": "hls_vi", "name": "NASA HLS Vegetation Indices", "version": "2.0", "licence": "NASA open data"},
+    {"id": "power", "name": "NASA POWER daily (MERRA-2)", "version": "v2", "licence": "NASA open data"},
+    {"id": "nasadem", "name": "NASA NASADEM", "version": "001", "licence": "NASA open data"},
+    {"id": "csb_nass", "name": "USDA NASS Crop Sequence Boundaries 2018–2025 with Cropland Data Layer crop codes", "version": "rev23", "licence": "Public domain (U.S. Government work)"},
+    {"id": "soilgrids", "name": "ISRIC SoilGrids", "version": "2.0", "licence": "CC-BY-4.0"},
+]
+
+
+def write_meta(out_dir: Path, history_tiles: list[str], accuracy=None, oblasts: dict | None = None,
+               sources: list[dict] | None = None) -> None:
+    sources = sources if sources is not None else SOURCES_UA
     meta = {"v": 1, "built": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             "coverage": {"historyTiles": history_tiles, "climateOnly": False}, "accuracy": accuracy, "sources": sources}
     if oblasts:

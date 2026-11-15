@@ -331,7 +331,8 @@ def merge() -> None:
     tiles = sorted({t for i in infos for t in i["tiles"]})
     if REGION == "us":
         # USA history 2018–2025 is USDA's own crop record; accuracy numbers of the Ukrainian model do not apply
-        write_meta(OUT_DIR, sorted({t for i in infos for t in i["tiles"]}), None,
+        from lan.export import SOURCES_US
+        write_meta(OUT_DIR, sorted({t for i in infos for t in i["tiles"]}), None, sources=SOURCES_US,
                    oblasts={i["code"]: {"name": i["oblast"], "fields": i["fields"], "withHistory": i["withHistory"],
                                         "bbox": i["bbox"], "tiles": f"tiles/fields-{i['code']}.pmtiles"} for i in infos})
         log(f"meta (USA): {len(infos)} states, {sum(i['fields'] for i in infos)} fields")
