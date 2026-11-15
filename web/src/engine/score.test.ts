@@ -131,7 +131,35 @@ describe('strategies', () => {
     const f = cases[3][1]
     const s = suggestRotations(histToSeasons(f.hist, 2016, 2026), ctx({ field: f }))
     expect(s[0].basis).toBe('cycle')
-    expect(s[0].score.slots.map((x) => x.crop)).toEqual(['w_wheat', 'maize', 'w_wheat'])
+    // 14 Nov: the winter window has closed, so the cycle continues from its spring step
+    expect(s[0].score.slots.map((x) => x.crop)).toEqual(['maize', 'w_wheat', 'maize'])
+    expect(s[0].score.tiles[0].hard).toBeNull()
+  })
+
+  it('As now continues a cycle straight on while the winter window is still open', () => {
+    const f = field({ hist: hist([[2021, 'winter_cereal'], [2022, 'soy'], [2023, 'winter_cereal'], [2024, 'soy'], [2025, 'winter_cereal'], [2026, 'soy']]) })
+    const s = suggestRotations(histToSeasons(f.hist, 2016, 2026), ctx({ field: f, today: new Date(2026, 8, 5) }))
+    expect(s[0].score.slots[0].crop).toMatch(/^w_/) // a winter cereal follows the 2026 soy
+    expect(s[0].score.slots[1].crop).toBe('soy')
+    expect(s[0].score.tiles[0].hard).toBeNull()
+  })
+
+  it('As now finds a winter / summer cycle when the summer names are only hints that change', () => {
+    const items = hist([[2021, 'sunflower'], [2022, 'winter_cereal'], [2023, 'maize'], [2024, 'winter_cereal'], [2025, 'soy'], [2026, 'winter_cereal']])
+    for (const h of items) if (h.k !== 'winter_cereal') { h.p = 0.4; h.g = 'summer' }
+    const f = field({ hist: items })
+    const s = suggestRotations(histToSeasons(f.hist, 2016, 2026), ctx({ field: f }))
+    expect(s[0].basis).toBe('cycle')
+    const groups = s[0].score.tiles.map((x) => x.crop.type)
+    expect(groups).toEqual(['spring', 'winter', 'spring'])
+    expect(s[0].score.tiles[0].hard).toBeNull() // the first season can still be sown
+  })
+
+  it('the regional pattern starts with a crop that can still be sown', () => {
+    const s = suggestRotations([], ctx({ field: field() }))
+    expect(s[0].basis).toBe('regional_default')
+    expect(s[0].score.slots[0].crop.startsWith('w_')).toBe(false)
+    expect(s[0].score.tiles[0].hard).toBeNull()
   })
 
   it('an emerged winter crop locks the first slot of every strategy', () => {

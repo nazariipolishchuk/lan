@@ -220,7 +220,7 @@ export const en = {
   'cmp.scaleNote': 'Each tile spans sowing to harvest on a month scale; winter crops cross the new year.',
   'cmp.d.why': 'Why suggested', 'cmp.d.evidence': 'Evidence', 'cmp.d.benefits': 'Benefits', 'cmp.d.gaps': 'Information gaps', 'cmp.d.check': 'Check locally',
   // ---------- explanation templates (engine/explain.ts) ----------
-  'why.as_now.cycle': 'Your field repeats a cycle; this continues it: {crops}.',
+  'why.as_now.cycle': 'Your field repeats a cycle; this continues it from the next step that can still be sown: {crops}.',
   'why.as_now.repeat_last3': 'No clear cycle, so this repeats the last three seasons: {crops}.',
   'why.as_now.regional_default': 'Too little known history, so this uses the common local pattern: {crops}.',
   'why.balanced': 'Highest total score ({total}) among crops grown nearby: {crops}.',

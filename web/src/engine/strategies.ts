@@ -52,7 +52,7 @@ export const REGIONAL_DEFAULT: CropId[] = ['w_wheat', 'maize', 'sunflower']
 const GROUP_STANDIN: Record<NonNullable<Season['group']>, CropId> = { winter: 'w_wheat', summer: 'maize', uncultivated: 'w_wheat' }
 
 /** The shortest cycle (2–4 seasons) that the whole sequence repeats, or null. */
-export function findCycle(seq: CropId[]): CropId[] | null {
+export function findCycle<T>(seq: T[]): T[] | null {
   for (let len = 2; len <= 4; len++) {
     if (seq.length < len * 2) continue
     const cyc = seq.slice(0, len)
@@ -61,24 +61,106 @@ export function findCycle(seq: CropId[]): CropId[] | null {
   return null
 }
 
-/** "As now": continue what the field has been doing. */
-export function asNow(history: Season[], slotYears: number[]): { crops: CropId[]; assumed: number[]; basis: Strategy['basis'] } {
+type Group = NonNullable<Season['group']>
+
+export interface AsNowOptions {
+  crops: CropsFile
+  /** Seasons of the plan that break a hard rule (closed sowing window, return interval, late harvest). */
+  hardCount?: (plan: CropId[]) => number
+  /** The first slot holds an emerged winter crop. */
+  locked?: CropId
+}
+
+/** The two winter cereals look the same from space: the history's "winter cereal" may be either. */
+const SAME_FROM_SPACE: Partial<Record<CropId, CropId>> = { w_wheat: 'w_barley', w_barley: 'w_wheat' }
+
+/**
+ * "As now": continue what the field has been doing.
+ * The pattern is the shortest cycle of crop names, else of groups (winter / summer: summer names are often
+ * only hints that change every year), else the last three seasons. Its continuation is shifted so that
+ * the first open season can still be sown, and each season may take another crop seen in the same group
+ * of this field's history, so the baseline is the nearest pattern a farmer could actually follow.
+ */
+export function asNow(history: Season[], slotYears: number[], opts?: AsNowOptions): { crops: CropId[]; assumed: number[]; basis: Strategy['basis'] } {
+  const groupOf = (id: CropId): Group => {
+    const t = opts?.crops.crops.find((c) => c.id === id)?.type
+    return t === 'winter' ? 'winter' : t === 'spring' ? 'summer' : 'uncultivated'
+  }
   const recent = history.slice(-6)
   const assumed: number[] = []
-  const seq: CropId[] = []
+  const seq: { name: CropId; group: Group }[] = []
   for (const s of recent) {
-    if (s.crop) seq.push(s.crop)
-    else if (s.group) { seq.push(s.hint ?? GROUP_STANDIN[s.group]); assumed.push(s.y) }
+    if (s.crop) seq.push({ name: s.crop, group: s.group ?? groupOf(s.crop) })
+    else if (s.group) { seq.push({ name: s.hint ?? GROUP_STANDIN[s.group], group: s.group }); assumed.push(s.y) }
   }
   const usable = seq.length >= 3 && assumed.length <= recent.length / 2 + 1
-  if (!usable) return { crops: slotYears.map((_, i) => REGIONAL_DEFAULT[i % 3]), assumed: [...slotYears], basis: 'regional_default' }
-  const cyc = findCycle(seq)
-  if (cyc) {
-    // continue the cycle from the position after the last season
-    return { crops: slotYears.map((_, i) => cyc[(seq.length + i) % cyc.length]), assumed, basis: 'cycle' }
+
+  // the pattern: per position, crop names in order of preference
+  let pattern: CropId[][]
+  let start: number
+  let basis: Strategy['basis']
+  const byFrequency = (names: CropId[]) => {
+    const n = new Map<CropId, number>()
+    names.forEach((c, i) => n.set(c, (n.get(c) ?? 0) + 1 + i / 100)) // ties: the most recent first
+    return [...n.keys()].sort((a, b) => n.get(b)! - n.get(a)!)
   }
-  const last3 = seq.slice(-3)
-  return { crops: slotYears.map((_, i) => last3[i % 3]), assumed, basis: 'repeat_last3' }
+  if (!usable) {
+    // the local pattern; a season may take the other local crop of its group, or the other winter cereal
+    pattern = REGIONAL_DEFAULT.map((c) => {
+      const twin = SAME_FROM_SPACE[c]
+      return [c, ...(twin ? [twin] : []), ...REGIONAL_DEFAULT.filter((x) => x !== c && groupOf(x) === groupOf(c))]
+    })
+    start = 0
+    basis = 'regional_default'
+  } else {
+    const names = seq.map((s) => s.name)
+    const cyc = findCycle(names)
+    const gcyc = cyc ? null : findCycle(seq.map((s) => s.group))
+    if (cyc) {
+      pattern = cyc.map((c) => [c])
+      basis = 'cycle'
+    } else if (gcyc) {
+      // a cycle of groups: each position offers the names seen at that position, most frequent first
+      pattern = gcyc.map((_, p) => byFrequency(names.filter((_, i) => i % gcyc.length === p)))
+      basis = 'cycle'
+    } else {
+      pattern = names.slice(-3).map((c) => [c])
+      basis = 'repeat_last3'
+    }
+    start = basis === 'repeat_last3' ? 0 : seq.length
+    // alternatives seen in the same group of this field's history
+    const seen = (g: Group) => byFrequency(names.filter((_, i) => seq[i].group === g))
+    pattern = pattern.map((cands) => {
+      const out = [...cands]
+      for (const c of cands) { const twin = SAME_FROM_SPACE[c]; if (twin) out.push(twin) }
+      for (const c of seen(groupOf(cands[0]))) out.push(c)
+      return [...new Set(out)]
+    })
+  }
+
+  const len = pattern.length
+  const plans = function* (): Generator<CropId[]> {
+    // every shift of the continuation, the straight one first; within a shift, preferred names first
+    for (let k = 0; k < len; k++) {
+      const cands = slotYears.map((_, i) => (i === 0 && opts?.locked ? [opts.locked] : pattern[(start + k + i) % len]))
+      if (opts?.locked && groupOf(pattern[(start + k) % len][0]) !== 'winter' && k < len - 1 && pattern.some((c) => groupOf(c[0]) === 'winter')) continue
+      const rec = function* (i: number, acc: CropId[]): Generator<CropId[]> {
+        if (i === cands.length) { yield acc; return }
+        for (const c of cands[i]) yield* rec(i + 1, [...acc, c])
+      }
+      yield* rec(0, [])
+    }
+  }
+  // the first plan without a hard violation; if there is none, the one with the fewest
+  let chosen: CropId[] | null = null
+  let fewest = Infinity
+  for (const p of plans()) {
+    const n = opts?.hardCount ? opts.hardCount(p) : 0
+    if (n < fewest) { chosen = p; fewest = n }
+    if (n === 0) break
+  }
+  const crops = chosen ?? slotYears.map((_, i) => REGIONAL_DEFAULT[i % 3])
+  return { crops, assumed: basis === 'regional_default' ? [...slotYears] : assumed, basis }
 }
 
 function slotsOf(years: number[], crops: CropId[], lockedFirst: boolean): PlanSlot[] {
@@ -95,8 +177,11 @@ export function suggestRotations(history: Season[], ctx: ScoreContext): Strategy
   const lockedFirst = !!plan[0]?.locked
   // emerged winter crop: wheat unless the farmer says which one in the history editor
   const lockedCrop: CropId = history.find((s) => s.y === years[0] && s.farmer && s.crop)?.crop ?? 'w_wheat'
-  const now = asNow(history, years)
-  if (lockedFirst) now.crops[0] = lockedCrop
+  const now = asNow(history, years, {
+    crops,
+    locked: lockedFirst ? lockedCrop : undefined,
+    hardCount: (p) => scorePlan(slotsOf(years, p, lockedFirst), history, ctx).tiles.filter((t) => t.hard).length,
+  })
   const allowed = (id: CropId) => !ctx.prefs || !blockReason(id, ctx.prefs)
   const pins = ctx.prefs?.pin ?? []
   const asNowSlots = slotsOf(years, now.crops, lockedFirst)
