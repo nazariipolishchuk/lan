@@ -1,7 +1,7 @@
 [project]
 name = "lan"
 version = "0.1.0"
-description = "Add your description here"
+description = "Lan data pipeline: NASA HLS greenness, POWER climate and field outlines into per-field crop history and climate files (NASA Space Apps 2026; written with an SI coding assistant, see docs/SI_USE.md)"
 authors = [
     { name = "Nazar Polishchuk", email = "polishuknazar37@gmail.com" }
 ]

@@ -11,8 +11,9 @@ ROOT=/c/Work/SpaceXChallenge
 P=$ROOT/pipeline
 LOG=$ROOT/data/logs
 ST=$LOG/us_status.txt
-H=$(grep -oE 'root@[0-9.]+' "$LOG/start_laptop_hls.cmd")
-SSH=(ssh -i "$HOME/.ssh/youtubeclip" -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 "$H")
+# the server address and its key stay outside the repo: the git-ignored launcher and LAN_SSH_KEY
+H=$(grep -oE '[a-z_][a-z0-9_-]*@[0-9.]+' "$LOG/start_laptop_hls.cmd")
+SSH=(ssh -i "${LAN_SSH_KEY:?set LAN_SSH_KEY to the VPS key file}" -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 "$H")
 export LAN_REGION=us PYTHONIOENCODING=utf-8
 TILES=$(wc -l < "$LOG/tiles_us.txt")
 cd "$P" || exit 1

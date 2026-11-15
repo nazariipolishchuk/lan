@@ -59,7 +59,7 @@ export function Intro({ onFind, onTour, onSkip }: { onFind: () => void; onTour: 
           <span>{t('intro.nasa')}</span>
           <div className="lang" role="group" aria-label="Language">
             <button type="button" aria-pressed={lang === 'en'} onClick={() => setLang('en')}>EN</button>
-            <button type="button" aria-pressed={lang === 'uk'} onClick={() => setLang('uk')}>UK</button>
+            <button type="button" aria-pressed={lang === 'uk'} onClick={() => setLang('uk')}>UA</button>
           </div>
         </div>
         <button type="button" className="intro-skip" onClick={onSkip}>{t('tour.skip')}</button>
