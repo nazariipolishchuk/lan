@@ -48,8 +48,10 @@ export const PLAN_CROPS: CropId[] = ['w_wheat', 'w_barley', 's_barley', 'maize',
 export const LOCAL_CROPS: CropId[] = ['w_wheat', 'w_barley', 's_barley', 'maize', 'sunflower', 'soy', 'sugar_beet', 'w_rape']
 /** Used when a field has no usable history. Local knowledge: wheat, maize and sunflower dominate (LOCAL_KNOWLEDGE.md). */
 export const REGIONAL_DEFAULT: CropId[] = ['w_wheat', 'maize', 'sunflower']
+/** The same for the USA: the corn–soybean rotation that dominates the Corn Belt (USDA CDL). */
+export const REGIONAL_DEFAULT_US: CropId[] = ['maize', 'soy']
 /** Stand-in crop for a season known only at group level, for "As now" only (marked as assumed). */
-const GROUP_STANDIN: Record<NonNullable<Season['group']>, CropId> = { winter: 'w_wheat', summer: 'maize', uncultivated: 'w_wheat' }
+const GROUP_STANDIN: Record<'winter' | 'summer', CropId> = { winter: 'w_wheat', summer: 'maize' }
 
 /** The shortest cycle (2–4 seasons) that the whole sequence repeats, or null. */
 export function findCycle<T>(seq: T[]): T[] | null {
@@ -65,10 +67,12 @@ type Group = NonNullable<Season['group']>
 
 export interface AsNowOptions {
   crops: CropsFile
-  /** Seasons of the plan that break a hard rule (closed sowing window, return interval, late harvest). */
+  /** How badly the plan breaks hard rules (closed sowing window, return interval, late harvest); 0 = not at all. */
   hardCount?: (plan: CropId[]) => number
   /** The first slot holds an emerged winter crop. */
   locked?: CropId
+  /** The local pattern for a field without usable history (default: Ukraine's). */
+  regional?: CropId[]
 }
 
 /** The two winter cereals look the same from space: the history's "winter cereal" may be either. */
@@ -91,7 +95,8 @@ export function asNow(history: Season[], slotYears: number[], opts?: AsNowOption
   const seq: { name: CropId; group: Group }[] = []
   for (const s of recent) {
     if (s.crop) seq.push({ name: s.crop, group: s.group ?? groupOf(s.crop) })
-    else if (s.group) { seq.push({ name: s.hint ?? GROUP_STANDIN[s.group], group: s.group }); assumed.push(s.y) }
+    // an uncultivated season (pasture, hay, set-aside) says nothing about which crops the field follows
+    else if (s.group && s.group !== 'uncultivated') { seq.push({ name: s.hint ?? GROUP_STANDIN[s.group], group: s.group }); assumed.push(s.y) }
   }
   const usable = seq.length >= 3 && assumed.length <= recent.length / 2 + 1
 
@@ -106,9 +111,10 @@ export function asNow(history: Season[], slotYears: number[], opts?: AsNowOption
   }
   if (!usable) {
     // the local pattern; a season may take the other local crop of its group, or the other winter cereal
-    pattern = REGIONAL_DEFAULT.map((c) => {
+    const regional = opts?.regional ?? REGIONAL_DEFAULT
+    pattern = regional.map((c) => {
       const twin = SAME_FROM_SPACE[c]
-      return [c, ...(twin ? [twin] : []), ...REGIONAL_DEFAULT.filter((x) => x !== c && groupOf(x) === groupOf(c))]
+      return [c, ...(twin ? [twin] : []), ...regional.filter((x) => x !== c && groupOf(x) === groupOf(c))]
     })
     start = 0
     basis = 'regional_default'
@@ -159,7 +165,7 @@ export function asNow(history: Season[], slotYears: number[], opts?: AsNowOption
     if (n < fewest) { chosen = p; fewest = n }
     if (n === 0) break
   }
-  const crops = chosen ?? slotYears.map((_, i) => REGIONAL_DEFAULT[i % 3])
+  const crops = chosen ?? slotYears.map((_, i) => (opts?.regional ?? REGIONAL_DEFAULT)[i % len])
   return { crops, assumed: basis === 'regional_default' ? [...slotYears] : assumed, basis }
 }
 
@@ -180,7 +186,10 @@ export function suggestRotations(history: Season[], ctx: ScoreContext): Strategy
   const now = asNow(history, years, {
     crops,
     locked: lockedFirst ? lockedCrop : undefined,
-    hardCount: (p) => scorePlan(slotsOf(years, p, lockedFirst), history, ctx).tiles.filter((t) => t.hard).length,
+    regional: field.c[0] < -30 ? REGIONAL_DEFAULT_US : REGIONAL_DEFAULT, // west of 30° W is the USA
+    // a missed sowing window in the first open season is the least believable baseline: it weighs more
+    hardCount: (p) => scorePlan(slotsOf(years, p, lockedFirst), history, ctx).tiles
+      .reduce((n, t, i) => n + (t.hard ? (i === (lockedFirst ? 1 : 0) ? 1.5 : 1) : 0), 0),
   })
   const allowed = (id: CropId) => !ctx.prefs || !blockReason(id, ctx.prefs)
   const pins = ctx.prefs?.pin ?? []

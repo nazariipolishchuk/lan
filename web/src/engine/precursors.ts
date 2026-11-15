@@ -60,6 +60,15 @@ export function histToSeasons(hist: HistoryItem[], from: number, to: number,
   return out
 }
 
+/**
+ * Model seasons reduced to their group (winter / summer / uncultivated), without a crop name.
+ * Used for the USA: there the model's crop names for 2026 are not plausible (sugar beet across Iowa),
+ * while its groups are; the CDL years (src 'map') are kept as they are.
+ */
+export function modelGroupsOnly(hist: HistoryItem[]): HistoryItem[] {
+  return hist.map((h) => (h.src === 'model' && h.k !== 'unknown' ? { ...h, k: 'unknown' as const } : h))
+}
+
 export interface RuleCheck {
   status: 'ok' | 'violation' | 'unknown'
   rule: 'EARLY_RETURN' | 'MAX_IN_ROW' | 'LATE_HARVEST'

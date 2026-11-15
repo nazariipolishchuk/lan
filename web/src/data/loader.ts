@@ -4,6 +4,7 @@
 // site; the browser unpacks them with DecompressionStream. Plain {ck}.json (older data) is the fallback.
 import type { FeatureCollection } from 'geojson'
 import { chunkOfId, decodeFieldId } from '../engine/fieldId'
+import { modelGroupsOnly } from '../engine/precursors'
 import type { ClimateCell, CropsFile, CurveChunk, FieldChunk, FieldRecord, Meta, RulesFile } from '../engine/types'
 
 const BASE = import.meta.env.BASE_URL
@@ -103,8 +104,11 @@ export async function loadField(id: string): Promise<FieldRecord | null> {
   }
   const ck = chunkOfId(id)
   if (!ck) return null
-  const c = await getChunk<FieldChunk>(`${baseOf(regionOfId(id))}/fields/${ck}`)
-  return c.fields.find((f) => f.id === id) ?? null
+  const region = regionOfId(id)
+  const c = await getChunk<FieldChunk>(`${baseOf(region)}/fields/${ck}`)
+  const f = c.fields.find((x) => x.id === id) ?? null
+  // USA: the 2026 model season gives only its group (winter / summer), never a crop name
+  return f && region === 'us' ? { ...f, hist: modelGroupsOnly(f.hist) } : f
 }
 
 export function loadClimate(cell: string, fixture = false, r: Region = 'ua'): Promise<ClimateCell> {

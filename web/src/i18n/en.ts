@@ -103,7 +103,7 @@ export const en = {
   'layer.last': "Latest season",
   'layer.drought': "Drought",
   'layer.rotation': "Rotation",
-  'layer.lastWhat': "What the satellite saw in the 2026 harvest season, at the level it can tell reliably (95% agreement with the KPI crop maps in Cherkasy).",
+  'layer.lastWhat': "What the satellite saw in the 2026 harvest season, at the level it can tell reliably: winter, summer or uncultivated. In Ukraine this agrees with the KPI crop maps on 95% of checked fields in Cherkasy; in the USA it has not been checked against a map yet.",
   'layer.lastUnknown': "Grey: too few clear looks, or outside the processed area. Oblasts below: share of fields with a winter crop.",
   'layer.winter': "Winter crop",
   'layer.summer': "Summer crop",

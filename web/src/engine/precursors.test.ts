@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkRepeat, checkReturn, histToSeasons } from './precursors'
+import { checkRepeat, checkReturn, histToSeasons, modelGroupsOnly } from './precursors'
 import { crop } from './testkit'
 import type { HistoryItem } from './types'
 
@@ -71,5 +71,18 @@ describe('return intervals (Resolution No. 164)', () => {
     expect(checkRepeat(gap, crop('maize'), 2027).status).toBe('unknown')
     const three = histToSeasons([h(2024, 'maize'), h(2025, 'maize'), h(2026, 'maize')], 2016, 2026)
     expect(checkRepeat(three, crop('maize'), 2027).status).toBe('violation')
+  })
+})
+
+describe('modelGroupsOnly (USA)', () => {
+  it('drops the crop name of model seasons and keeps their group; map years stay', () => {
+    const hist: HistoryItem[] = [
+      { y: 2025, k: 'maize', p: 0.95, src: 'map' },
+      { y: 2026, k: 'sugar_beet', p: 0.7, src: 'model', g: 'summer' },
+    ]
+    const s = histToSeasons(modelGroupsOnly(hist), 2025, 2026)
+    expect(s[0]).toMatchObject({ crop: 'maize', known: true })
+    expect(s[1]).toMatchObject({ crop: null, known: false, group: 'summer' })
+    expect(s[1].hint).toBeUndefined()
   })
 })
