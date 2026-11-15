@@ -114,6 +114,59 @@ threshold; the rules never use it; the farmer confirms it. Winter rapeseed canno
 winter cereals yet (stated in every plan's information gaps). Next step: N's known fields (UT1) give the
 first Ukrainian crop-level ground truth.
 
+### Second attempt: crop model trained across the USA (Sun 15 Nov 08:30)
+
+Trained on 1,068,389 labelled field-years: HLS greenness 2023–2025 on 160 US tiles in every state, labels
+from USDA Crop Sequence Boundaries (CDL 2023–2025), sunflower and sugar-beet tiles over-sampled (55 of 160)
+because both are rare in the USA. Season timing relative to the median summer green-up per tile and year.
+Job `pipeline/jobs/train_us.py`, numbers in `data/work/metrics_us_crop.json`.
+
+| Held-out US tiles (31 tiles, 102,641 field-years) | maize | soy | sugar beet | sunflower | spring cereal |
+|---|---|---|---|---|---|
+| F1 | 0.69 | 0.72 | 0.70 | 0.73 | 0.89 |
+
+Macro-F1 0.74, accuracy 0.75. In Ukraine it is less wrong than the Red River model (which called most
+summer fields soybean), but still not plausible. Share of the summer group, 2019–2026:
+
+| Oblast | Crop | Red River model | USA-wide model | Reference |
+|---|---|---|---|---|
+| Cherkasy | maize | 4–50 % | 17–56 % | ≈ 45 %, steady (348 k ha harvested, 2021) |
+| Cherkasy | soybean | 26–72 % | 12–58 % | ≈ 13 % |
+| Cherkasy | sunflower | 4–15 % | 8–34 % | ≈ 30 % |
+| Kharkiv | sunflower | 5–15 % | 17–34 % | the leading crop |
+| Odesa | spring cereals | 29–59 % | 9–53 % | well below sunflower |
+
+The shares swing two-fold between years while real areas move by a few per cent. **Decision: crop names in
+Ukraine stay hints; the site is unchanged.** The likely cause is the label domain, not the model: every
+crop-name label comes from another continent, while the published Ukrainian crop maps reach F1 > 0.9 with
+local labels (Kussul et al. 2025).
+
+### Third attempt: Ukrainian labels (Sun 15 Nov 08:46) — shipped as hints
+
+Labels: the 10 m crop type map of Ukraine for 2020 (`ua_cropmap_2020`; the map scores 90 % on its authors'
+954 validation points: maize 97 %, sunflower 89 % recall). One label per field-year by the KPI majority rules.
+Sample: 8,000 fields in each of 14 oblasts across all zones (05 12 14 18 23 32 35 46 48 51 53 59 63 71).
+Two models inside our group model: summer maize / sunflower / other, winter wheat / rapeseed. Features:
+the absolute curve and phenology plus the curve relative to each tile-year's summer green-up. Job
+`pipeline/jobs/train_ua_crops.py`, numbers in `data/work/metrics_ua_crop.json`.
+
+| Held-out tiles, 2020 | F1 | Support |
+|---|---|---|
+| maize | 0.90 | 5,629 |
+| sunflower | 0.77 | 2,214 |
+| other summer crop | 0.83 | 595 |
+| winter wheat | 0.99 | 1,688 |
+| winter rapeseed | 0.71 | 77 |
+
+Summer macro-F1 0.83 (accuracy 0.86); winter macro-F1 0.85. **The geography is right for the first time:**
+sunflower leads the summer crops in Zaporizhzhia, Donetsk, Mykolaiv, Dnipropetrovsk and Kharkiv; maize
+leads in Lviv, Zhytomyr and Sumy. **The years are not stable:** Cherkasy maize is 56–64 % of the summer
+group in 2020–2023 but 23 % in 2024; Poltava, Sumy and Kyiv show the same 2024 jump to "sunflower". 2024 was
+a drought summer: maize senesced early and its curve looked like sunflower; a model trained on one year
+cannot know that. **Decision:** the new models replace the US-trained ones, crop names stay hints
+(p ≤ 0.5), winter rapeseed appears as a hint. Next step: a second label year (JRC EU crop map 2022, which
+covers Ukraine and adds soybean and sugar beet) and more bands (SWIR, red edge, Sentinel-1 radar).
+
 ## Engine on real fields — task 2.5
 
 Card and the three strategies on the three showcase fields, real Cherkasy climate cells: card 2–7 ms,

@@ -225,10 +225,45 @@ def load_models(path: Path):
     return m["group"], m["crop"]
 
 
-def predict_history(cur: pd.DataFrame, mg, mc) -> pd.DataFrame:
-    """Curves (id, y, d…) → history rows (id, y, g, pg, crop, pc, n_valid, k, p)."""
+UA_SUMMER = ["maize", "sunflower", "other"]
+UA_WINTER = ["wheat", "rapeseed"]
+
+
+def tile_ref(df: pd.DataFrame, summer: np.ndarray) -> pd.Series:
+    """Median green-up dekad of the summer rows per (tile, year); the year's median where a tile has none."""
+    s = df[summer]
+    by_ty = s.groupby(["tile", "y"])["greenup_dekad"].median()
+    by_y = s.groupby("y")["greenup_dekad"].median()
+    key = pd.MultiIndex.from_arrays([df["tile"], df["y"]])
+    r = pd.Series(by_ty.reindex(key).to_numpy(), index=df.index)
+    return r.fillna(df["y"].map(by_y)).astype(float)
+
+
+def ua_crop_x(df: pd.DataFrame, ref: pd.Series) -> pd.DataFrame:
+    """Features of the Ukrainian crop models: absolute curve and phenology + the season-relative curve."""
+    x = crop_features(df, ref)
+    return pd.concat([df[FEATS], x[[c for c in CROP_FEATS if c not in FEATS]]], axis=1)
+
+
+def load_ua_crop_models(path: Path):
+    """Models from jobs/train_ua_crops.py (labels: Ukraine crop type map 2020), or None."""
+    import pickle
+
+    return pickle.loads(path.read_bytes()) if path.exists() else None  # our own file
+
+
+def predict_history(cur: pd.DataFrame, mg, mc, ua_crop=None, tiles: pd.Series | None = None) -> pd.DataFrame:
+    """Curves (id, y, d…) → history rows (id, y, g, pg, crop, pc, n_valid, k, p).
+
+    With `ua_crop` (Ukrainian crop models) and `tiles` (field → home tile), crop names come from models
+    trained on Ukrainian labels: maize / sunflower / other inside the summer group, wheat / rapeseed inside
+    the winter group. They stay hints (p ≤ HINT_CAP): trained on one year (2020), their yearly shares swing
+    in drought years (VALIDATION.md). A wheat season keeps the group's confidence, as before.
+    """
     ua = features(cur)
     g, pg_all = predict(mg, ua[FEATS], GROUPS)
+    if ua_crop is not None and tiles is not None:
+        return _predict_ua(ua, g, pg_all, ua_crop, tiles)
     ua_x = crop_features(ua, year_ref(ua, pd.Series(g == "summer", index=ua.index)))
     k, pc_all = predict(mc, ua_x, CROPS)
     p_group = pg_all.max(1)
@@ -240,6 +275,30 @@ def predict_history(cur: pd.DataFrame, mg, mc) -> pd.DataFrame:
     # plausibility check against official statistics (DECISIONS.md, Sat 12:52), so they ship as hints
     # below the engine's confidence threshold: the farmer confirms them, the rules do not use them.
     hist["p"] = np.where(hist.g == "summer", np.minimum(p_summer * pc_all.max(1), HINT_CAP), p_group).round(3)
+    unknown = hist["n_valid"] < MIN_VALID
+    hist.loc[unknown, ["k", "p"]] = ["unknown", 0.0]
+    return hist
+
+
+def _predict_ua(ua: pd.DataFrame, g: np.ndarray, pg_all: np.ndarray, models: dict, tiles: pd.Series) -> pd.DataFrame:
+    ua = ua.copy()
+    ua["tile"] = ua["id"].map(tiles)
+    summer, winter = g == "summer", g == "winter"
+    x = ua_crop_x(ua, tile_ref(ua, summer))
+    p_group = pg_all.max(1)
+    crop = np.where(winter, "wheat", np.where(summer, "other", "other")).astype(object)
+    pc = np.zeros(len(ua))
+    for sel, m, labels in ((summer, models["summer"], UA_SUMMER), (winter, models["winter"], UA_WINTER)):
+        if sel.any():
+            k, p = predict(m, x[sel], labels)
+            crop[sel] = k
+            pc[sel] = p.max(1)
+    hist = pd.DataFrame({"id": ua["id"], "y": ua["y"], "g": g, "pg": p_group.round(3), "crop": crop,
+                         "pc": pc.round(3), "n_valid": ua["n_valid"]})
+    rape = winter & (crop == "rapeseed")
+    hist["k"] = np.select([winter & ~rape, rape, g == "uncultivated"], ["winter_cereal", "rapeseed", "other"], crop)
+    hint = np.minimum(p_group * pc, HINT_CAP)
+    hist["p"] = np.where(summer | rape, hint, p_group).round(3)
     unknown = hist["n_valid"] < MIN_VALID
     hist.loc[unknown, ["k", "p"]] = ["unknown", 0.0]
     return hist

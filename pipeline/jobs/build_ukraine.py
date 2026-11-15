@@ -188,7 +188,8 @@ def oblast(code: str, models) -> dict:
         cur.columns = [f"d{k}" for k in cur.columns]
         curves = cur.reset_index()
         years = sorted(int(y) for y in curves["y"].unique())
-        h = predict_history(curves, *models)
+        mg, mc, uac = models
+        h = predict_history(curves, mg, mc, uac, ht)
         h["tile"] = h["id"].map(ht)
         h.to_parquet(d / "history.parquet", index=False)
         hist = history_items(h)
@@ -319,6 +320,12 @@ def merge() -> None:
     acc = {"macroF1": g["macroF1"], "perClass": g["perClass"], "n": g["n"], "labelSource": g["labelSource"],
            "accuracy": g["accuracy"], "testTiles": g["testTiles"], "confusion": g["confusion"], "labels": g["labels"],
            "crop": {k: metrics["crop"][k] for k in ("macroF1", "accuracy", "perClass", "n", "labelSource", "testTiles")}}
+    if (WORK_DIR / "metrics_ua_crop.json").exists():  # crop names from Ukrainian labels (train_ua_crops.py)
+        mu = json.loads((WORK_DIR / "metrics_ua_crop.json").read_text(encoding="utf-8"))
+        s, w = mu["heldOut2020"]["summer"], mu["heldOut2020"]["winter"]
+        acc["crop"] = {"macroF1": s["macroF1"], "accuracy": s["accuracy"], "perClass": s["perClass"], "n": s["n"],
+                       "labelSource": mu["labelSource"], "testTiles": mu["testTiles"], "region": "ua",
+                       "winter": {k: w[k] for k in ("macroF1", "accuracy", "perClass", "n")}}
     if (WORK_DIR / "metrics_ua.json").exists():
         acc["ukraine"] = json.loads((WORK_DIR / "metrics_ua.json").read_text(encoding="utf-8"))
     oblasts = {i["code"]: {"name": i["oblast"], "fields": i["fields"], "withHistory": i["withHistory"],
@@ -419,8 +426,10 @@ def main() -> int:
     elif a.step == "tiles-index":
         tiles_index()
     elif a.step == "oblast":
-        from lan.classify import load_models
-        models = load_models(WORK_DIR / "models.pkl")
+        from lan.classify import load_models, load_ua_crop_models
+        # Ukraine: crop names from the models trained on Ukrainian labels (jobs/train_ua_crops.py)
+        uac = load_ua_crop_models(WORK_DIR / "models_ua_crop.pkl") if REGION == "ua" else None
+        models = (*load_models(WORK_DIR / "models.pkl"), uac)
         for c in codes_arg(a.codes):
             oblast(c, models)
     elif a.step == "validate":

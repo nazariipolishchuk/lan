@@ -42,22 +42,31 @@ def majority_label(counts: np.ndarray, total: int) -> str | None:
 
 def kpi_counts(raster: Path, fields, band_rows: int = 2048) -> pd.DataFrame:
     """Pixel counts of each KPI class inside each field. `fields`: GeoDataFrame with `id` (any CRS)."""
+    return class_counts(raster, fields, KPI_CLASSES, band_rows)
+
+
+# Ukraine crop type map 2020, 10 m (Chen, Tu et al. 2024, Commun. Earth Environ.; Zenodo 11065080, CC-BY-4.0)
+UA2020_CLASSES = {1: "wheat", 2: "sunflower", 3: "rapeseed", 4: "other", 5: "maize"}
+
+
+def class_counts(raster: Path, fields, classes: dict[int, str], band_rows: int = 2048) -> pd.DataFrame:
+    """Pixel counts of each class (raster code → name) inside each field, plus `total` field pixels."""
     import rasterio
     from rasterio.features import rasterize
     from rasterio.windows import Window, from_bounds
 
+    k = len(classes) + 1
     with rasterio.open(raster) as ds:
         f = fields.to_crs(ds.crs)
         win = from_bounds(*f.total_bounds, transform=ds.transform).round_offsets().round_lengths()
-        col0, row0 = int(win.col_off), max(0, int(win.row_off))
+        col0, row0 = max(0, int(win.col_off)), max(0, int(win.row_off))
         width = int(win.width)
         row_end = min(ds.height, int(win.row_off + win.height) + 1)
         n = len(f)
-        cls_codes = np.array(list(KPI_CLASSES))
         lut = np.zeros(256, dtype=np.int64)
-        for j, code in enumerate(cls_codes):
-            lut[code] = j + 1  # 0 = not one of the three classes
-        acc = np.zeros((n + 1) * 4, dtype=np.int64)
+        for j, code in enumerate(classes):
+            lut[code] = j + 1  # 0 = none of the classes
+        acc = np.zeros((n + 1) * k, dtype=np.int64)
         bounds = f.geometry.bounds
         for r in range(row0, row_end, band_rows):
             h = min(band_rows, row_end - r)
@@ -73,10 +82,26 @@ def kpi_counts(raster: Path, fields, band_rows: int = 2048) -> pd.DataFrame:
             if not m.any():
                 continue
             v = ds.read(1, window=w, boundless=True, fill_value=0)
-            acc += np.bincount(lab[m].astype(np.int64) * 4 + lut[v[m]], minlength=(n + 1) * 4)
-        acc = acc.reshape(n + 1, 4)[1:]
-    return pd.DataFrame({"id": f["id"].to_numpy(), "total": acc.sum(1), "winter": acc[:, 1],
-                         "summer": acc[:, 2], "uncultivated": acc[:, 3]})
+            acc += np.bincount(lab[m].astype(np.int64) * k + lut[v[m]], minlength=(n + 1) * k)
+        acc = acc.reshape(n + 1, k)[1:]
+    out = pd.DataFrame({"id": f["id"].to_numpy(), "total": acc.sum(1)})
+    for j, name in enumerate(classes.values()):
+        out[name] = acc[:, j + 1]
+    return out
+
+
+def crop_majority(c: pd.DataFrame, names: list[str]) -> pd.Series:
+    """Majority class per field with the KPI rules (≥ 50 % of the field mapped, ≥ 70 % purity); None otherwise."""
+    arr = c[names].to_numpy()
+    return pd.Series([majority_of(arr[i], int(c["total"].iat[i]), names) for i in range(len(c))], index=c.index)
+
+
+def majority_of(counts: np.ndarray, total: int, names: list[str]) -> str | None:
+    mapped = int(counts.sum())
+    if total <= 0 or mapped == 0 or mapped < MIN_MAPPED * total:
+        return None
+    i = int(np.argmax(counts))
+    return names[i] if counts[i] >= MIN_PURITY * mapped else None
 
 
 def kpi_labels(raw_dir: Path, fields, years=range(2019, 2025)) -> pd.DataFrame:
