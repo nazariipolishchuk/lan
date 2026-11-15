@@ -9,6 +9,7 @@ where it stopped. Steps:
   oblast CODE…     curves → crop history (saved models) → now/bare → chunk fragments → GeoJSONSeq input
   validate [CODE…] group model vs KPI maps on one tile per oblast outside Cherkasy → work/metrics_ua.json
   merge            fragments of every oblast → out/fields/{ck}.json.gz, out/curves/{ck}.json.gz, meta.json
+  dedupe           drop border duplicates (one field stored once per oblast) from an existing out/fields
   geojson CODE…    GeoJSONSeq per oblast with layer values (needs work/ua/scores.json from batch-score.ts),
                    then out/oblasts.json (oblast outlines with the layers summarised, for small scales)
 
@@ -282,10 +283,27 @@ def _dump_gz(path: Path, obj) -> int:
     return path.stat().st_size
 
 
+def dedupe() -> None:
+    """Drop border duplicates from an already merged out/fields in place (same rule as merge)."""
+    from lan.export import dedupe_fields, oblast_contains
+
+    contains = oblast_contains(OUT_DIR / "oblasts.json")
+    total = files = 0
+    for p in sorted((OUT_DIR / "fields").glob("*.json.gz")):
+        doc = json.loads(gzip.decompress(p.read_bytes()))
+        doc["fields"], dropped = dedupe_fields(doc["fields"], contains)
+        if dropped:
+            _dump_gz(p, doc)
+            total += dropped
+            files += 1
+    log(f"dedupe: {total} duplicate records dropped in {files} chunks")
+
+
 def merge() -> None:
     """Fragments of all oblasts → out/fields and out/curves (gzip JSON), plus meta.json."""
-    from lan.export import write_meta
+    from lan.export import dedupe_fields, oblast_contains, write_meta
 
+    contains = oblast_contains(OUT_DIR / "oblasts.json")
     infos = [json.loads((UA / c / "oblast.json").read_text(encoding="utf-8")) for c in CODES if (UA / c / "oblast.json").exists()]
     for kind, key in (("fields", "fields"), ("curves", "curves")):
         dst = OUT_DIR / kind
@@ -295,7 +313,7 @@ def merge() -> None:
         for i in infos:
             for p in (UA / i["code"] / "out" / kind).glob("*.json"):
                 frags.setdefault(p.stem, []).append(p)
-        size = 0
+        size = dup = 0
         for ck, ps in frags.items():
             docs = [json.loads(p.read_text(encoding="utf-8")) for p in ps]
             doc = docs[0]
@@ -305,8 +323,11 @@ def merge() -> None:
                 else:
                     assert o["years"] == doc["years"], f"curve years differ in chunk {ck}"
                     doc["curves"].update(o["curves"])
+            if kind == "fields":
+                doc["fields"], dropped = dedupe_fields(doc["fields"], contains)
+                dup += dropped
             size += _dump_gz(dst / f"{ck}.json.gz", doc)
-        log(f"{kind}: {len(frags)} chunks, {size / 1e6:.1f} MB gzip")
+        log(f"{kind}: {len(frags)} chunks, {size / 1e6:.1f} MB gzip" + (f", {dup} border duplicates dropped" if dup else ""))
     tiles = sorted({t for i in infos for t in i["tiles"]})
     if REGION == "us":
         # USA history 2018–2025 is USDA's own crop record; accuracy numbers of the Ukrainian model do not apply
@@ -409,7 +430,7 @@ def oblast_layer(scores: dict) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["split", "prep", "tiles-index", "oblast", "validate", "merge", "geojson"])
+    ap.add_argument("step", choices=["split", "prep", "tiles-index", "oblast", "validate", "merge", "dedupe", "geojson"])
     ap.add_argument("codes", nargs="*")
     ap.add_argument("--force", action="store_true", help="geojson: rewrite existing files")
     ap.add_argument("--layer", action="store_true", help="geojson: also write oblasts.json for these codes")
@@ -436,6 +457,8 @@ def main() -> int:
         validate(a.codes or list(VALIDATE))
     elif a.step == "merge":
         merge()
+    elif a.step == "dedupe":
+        dedupe()
     elif a.step == "geojson":
         codes = [c for c in codes_arg(a.codes) if (UA / c / "oblast.json").exists()]
         if (UA / "scores.tsv").exists():  # large builds: read only the fields of the requested regions

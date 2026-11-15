@@ -70,6 +70,40 @@ def write_chunks(fields: pd.DataFrame, out_dir: Path, soil=None, terrain=None, h
     return n
 
 
+def dedupe_fields(recs: list[dict], contains=None) -> tuple[list[dict], int]:
+    """One record per field id. Fields of The World stores a field on an oblast border once per oblast, so the
+    merged chunk held the same id twice (QA report, 15 Nov: 285 ids) and the site showed only the first copy.
+    Keeps the copy whose oblast contains the field's centre (`contains(oblast, lon, lat)`), else the one with
+    more known seasons, else the first. Returns the records in their original order and the number dropped."""
+    by: dict[str, list[int]] = {}
+    for k, r in enumerate(recs):
+        by.setdefault(r["id"], []).append(k)
+    drop: set[int] = set()
+    for ks in by.values():
+        if len(ks) < 2:
+            continue
+        def rank(k: int) -> tuple:
+            r = recs[k]
+            inside = bool(contains and r.get("c") and contains(r["adm"]["oblast"], r["c"][0], r["c"][1]))
+            known = sum(1 for h in r.get("hist") or [] if h.get("k") != "unknown")
+            return (inside, known, -k)
+        best = max(ks, key=rank)
+        drop |= {k for k in ks if k != best}
+    return [r for k, r in enumerate(recs) if k not in drop], len(drop)
+
+
+def oblast_contains(oblasts_geojson: Path):
+    """`contains(oblast name, lon, lat)` from out/oblasts.json; None when the file is missing."""
+    if not oblasts_geojson.exists():
+        return None
+    from shapely.geometry import Point, shape
+    from shapely.prepared import prep
+
+    gj = json.loads(oblasts_geojson.read_text(encoding="utf-8"))
+    shapes = {f["properties"]["name"]: prep(shape(f["geometry"])) for f in gj["features"]}
+    return lambda name, lon, lat: name in shapes and shapes[name].contains(Point(lon, lat))
+
+
 def write_curve_chunks(fields: pd.DataFrame, curves: pd.DataFrame, out_dir: Path, years: list[int]) -> int:
     """Contract CurveChunk: per field all seasons concatenated (len(years) × 27 values)."""
     from lan.curves import D0, D1, encode_curve
@@ -143,6 +177,9 @@ def write_meta(out_dir: Path, history_tiles: list[str], accuracy=None, oblasts: 
         {"id": "ftw", "name": "Fields of The World, global field boundaries 2025", "version": "2026", "licence": "CC-BY-4.0"},
         {"id": "soilgrids", "name": "ISRIC SoilGrids", "version": "2.0", "licence": "CC-BY-4.0"},
         {"id": "kpi_wb", "name": "KPI winter/summer crop maps of Ukraine 2019–2024 (World Bank DDH 0066913)", "version": "2025", "licence": "CC-BY-4.0"},
+        {"id": "ua_cropmap_2020", "name": "10 m crop type map of Ukraine 2020 (Chen et al. 2024, Zenodo 11065080)", "version": "2024", "licence": "CC-BY-4.0"},
+        {"id": "geonames", "name": "GeoNames Ukraine dump and cities5000", "version": "—", "licence": "CC-BY-4.0"},
+        {"id": "geoboundaries", "name": "geoBoundaries gbOpen UKR ADM1 (Runfola et al. 2020; OpenStreetMap / Wambacher 2017)", "version": "—", "licence": "ODbL 1.0"},
     ]
     meta = {"v": 1, "built": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
             "coverage": {"historyTiles": history_tiles, "climateOnly": False}, "accuracy": accuracy, "sources": sources}
