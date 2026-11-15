@@ -43,9 +43,9 @@ Update this table at every checkpoint. It is the single source of truth after a 
 | P3 Compare + evidence + first deploy | Sat 18:00–22:00 | Live link, scope level L0 complete | ☑ 17:50, closed by N ~19:30 (live https://nazariipolishchuk.github.io/lan/; compare layout reworked after N's review; project-page draft in `docs/SUBMISSION_DRAFT.md`; T's bug pass moved to P4/P5) |
 | P4 Expansion + polish I | Sat 22:00–02:00 | Night run started, layers, search, About, mobile | ☑ 21:45 (all Ukraine live: 597,488 fields with history; out-of-region check 79–95 %; layers, search, About, intro + tour, phone pass; 4.7 insurance recording left for N) |
 | Night | Sun 02:00–08:00 | VPS processes the rest of Ukraine; people sleep | ☑ not needed: HLS for all Ukraine finished Sat 20:48, ingested and deployed by 21:45 |
-| P5 Ingest + human validation | Sun 08:00–11:00 | Wider coverage live; validation numbers; bug list | ☐ |
-| P6 Fix and freeze | Sun 11:00–15:00 | Insurance submission at 12:00; feature freeze 14:00 | ☐ |
-| P7 Presentation | Sun 15:00–18:30 | 7-slide PDF deck (D14 changed), project page text and images, README | ☐ |
+| P5 Ingest + human validation | Sun 08:00–11:00 | Wider coverage live; validation numbers; bug list | ◐ 11:24: USA live (48 states, 15,973,095 fields, CDL history 2018–2025); Ukrainian crop-name hints from the 2020 crop map (09:23); QA bugs fixed (border duplicates: 597,389 fields, 597,203 with history); bug list in `BUGS.md`. **Not done:** team checks on known fields (UT1–UT5) |
+| P6 Fix and freeze | Sun 11:00–15:00 | Insurance submission at 12:00; feature freeze 14:00 | ◐ freeze at 14:00 kept until the final review; 15:31–15:52 deliberate exceptions from the review's fix list (As now baseline, Sow next warning, USA hints, texts, meta counts). Insurance submission: not recorded here (N) |
+| P7 Presentation | Sun 15:00–18:30 | 7-slide PDF deck (D14 changed), project page text and images, README | ◐ 15:50: README and `SUBMISSION_DRAFT.md` up to date (USA, links, models, sources, SI split). **Left (N):** the deck, screenshots after the deploy |
 | P8 Submit | Sun 18:30–20:30 | "Submit for Judging" done and verified | ☐ |
 | P9 Buffer + wrap | Sun 20:30–23:00 | Only critical fixes; final freeze 23:00 | ☐ |
 

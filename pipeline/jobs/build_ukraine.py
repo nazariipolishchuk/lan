@@ -428,9 +428,30 @@ def oblast_layer(scores: dict) -> None:
     log(f"oblasts.json: {len(feats)} oblasts, {(OUT_DIR / 'oblasts.json').stat().st_size / 1e3:.0f} KB")
 
 
+def recount() -> None:
+    """Per-oblast field counts in meta.json from the merged out/fields (after dedupe), nothing else changed."""
+    from collections import Counter
+
+    meta_path = OUT_DIR / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    fields, with_hist = Counter(), Counter()
+    for p in sorted((OUT_DIR / "fields").glob("*.json.gz")):
+        for f in json.loads(gzip.decompress(p.read_bytes()))["fields"]:
+            fields[f["adm"]["oblast"]] += 1
+            with_hist[f["adm"]["oblast"]] += bool(f["hist"])
+    by_name = {o["name"]: code for code, o in meta["oblasts"].items()}
+    unknown = set(fields) - set(by_name)
+    assert not unknown, f"oblast names not in meta.json: {sorted(unknown)}"
+    for name, code in by_name.items():
+        meta["oblasts"][code]["fields"] = fields[name]
+        meta["oblasts"][code]["withHistory"] = with_hist[name]
+    meta_path.write_text(json.dumps(meta, indent=1), encoding="utf-8")
+    log(f"recount: {sum(fields.values())} fields, {sum(with_hist.values())} with history, {len(by_name)} oblasts")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["split", "prep", "tiles-index", "oblast", "validate", "merge", "dedupe", "geojson"])
+    ap.add_argument("step", choices=["split", "prep", "tiles-index", "oblast", "validate", "merge", "dedupe", "recount", "geojson"])
     ap.add_argument("codes", nargs="*")
     ap.add_argument("--force", action="store_true", help="geojson: rewrite existing files")
     ap.add_argument("--layer", action="store_true", help="geojson: also write oblasts.json for these codes")
@@ -459,6 +480,8 @@ def main() -> int:
         merge()
     elif a.step == "dedupe":
         dedupe()
+    elif a.step == "recount":
+        recount()
     elif a.step == "geojson":
         codes = [c for c in codes_arg(a.codes) if (UA / c / "oblast.json").exists()]
         if (UA / "scores.tsv").exists():  # large builds: read only the fields of the requested regions
