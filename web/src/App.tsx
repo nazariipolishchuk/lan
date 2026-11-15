@@ -25,7 +25,7 @@ function Main() {
   const storageOk = useStore((s) => s.storageOk)
   const [about, setAbout] = useState(() => window.location.hash.startsWith('#/about'))
   const demoParam = new URLSearchParams(window.location.search).get('demo') === '1'
-  // S0 on the first visit to the bare map; ?demo=1 goes straight to the tour (S9)
+  // S0 on the first visit to the bare map; ?demo=1 opens the demo field and goes straight to the guide (S9)
   const [intro, setIntro] = useState(() => !demoParam && !introSeen() && !parseHash(window.location.hash).id && !window.location.hash.startsWith('#/about'))
   const [tour, setTour] = useState(demoParam)
   const [focusSearch, setFocusSearch] = useState(0)
@@ -43,13 +43,18 @@ function Main() {
     setAbout(true)
     history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/about`)
   }
-  const startDemo = () => {
+  const startTour = () => {
     markIntroSeen()
     setIntro(false)
     setAbout(false)
-    useStore.getState().select(DEMO_FIELD)
     setTour(true)
   }
+  const endTour = useCallback(() => {
+    setTour(false)
+    const s = useStore.getState()
+    s.setCompare(false)
+    if (s.selectedId && s.sheet === 'peek') s.setSheet('half')
+  }, [])
   const skipIntro = useCallback(() => {
     markIntroSeen()
     setIntro(false)
@@ -101,8 +106,8 @@ function Main() {
         {selectedId && compare && <Compare key={`c-${selectedId}`} id={selectedId} />}
         {about && <About onClose={closeAbout} onReplay={() => { closeAbout(); setIntro(true) }} />}
       </main>
-      {intro && <Intro onSkip={skipIntro} onDemo={startDemo} onFind={() => { skipIntro(); setFocusSearch((n) => n + 1) }} />}
-      {tour && selectedId && <Tour onEnd={() => { setTour(false); useStore.getState().setCompare(false) }} />}
+      {intro && <Intro onSkip={skipIntro} onTour={startTour} onFind={() => { skipIntro(); setFocusSearch((n) => n + 1) }} />}
+      {tour && <Tour onEnd={endTour} />}
     </div>
   )
 }

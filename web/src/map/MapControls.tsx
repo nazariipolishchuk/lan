@@ -95,7 +95,7 @@ export function MapControls({ focusSearch = 0 }: { focusSearch?: number }) {
   const other = (p: Place) => (lang === 'uk' ? p[0] : p[1])
   return (
     <div className="map-controls">
-      <div className="search-row">
+      <div className="search-row" data-tour="search">
         <div className="search" role="combobox" aria-expanded={results.length > 0} aria-haspopup="listbox" aria-owns="search-list">
           <span className="search-icon" aria-hidden="true">⌕</span>
           <input ref={input} type="search" value={q} placeholder={t('top.search')} aria-label={t('top.search')}
@@ -126,7 +126,7 @@ export function MapControls({ focusSearch = 0 }: { focusSearch?: number }) {
         </button>
       </div>
       {locMsg && <p className="map-msg" role="status">{locMsg}</p>}
-      <div className="layer-chips" role="group" aria-label={t('layer.group')}>
+      <div className="layer-chips" data-tour="layers" role="group" aria-label={t('layer.group')}>
         {MAP_LAYERS.map((l) => (
           <button key={l} type="button" className="layer-chip" aria-pressed={mapLayer === l}
             onClick={() => { setMapLayer(l); setLegendOpen(true) }}>
@@ -135,7 +135,7 @@ export function MapControls({ focusSearch = 0 }: { focusSearch?: number }) {
         ))}
       </div>
       {lg && legendOpen && (
-        <div className="legend" role="note" data-open={legendMore}>
+        <div className="legend" data-tour="legend" role="note" data-open={legendMore}>
           <div className="legend-head">
             <b>{t(lg.title)}</b>
             <button type="button" className="legend-x" aria-label={t('card.close')} onClick={() => setLegendOpen(false)}>×</button>

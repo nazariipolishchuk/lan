@@ -1,32 +1,16 @@
-# React + TypeScript + Vite
+# Lan web app
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The site at https://nazariipolishchuk.github.io/lan/. What it is, how to try it and how it works are
+described in the [root README](../README.md).
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev     # http://localhost:5173 (data from public/data → ../data/out)
+npm test        # vitest: engine, rules, translations, guide layout
+npm run lint    # oxlint
+npm run build   # tsc + vite → dist/
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Code layout: `src/screens` (intro and quick guide in `Intro.tsx`, its geometry in `guideLayout.ts`;
+field card, comparison, evidence charts), `src/engine` (scoring rules), `src/map` (MapLibre, layers,
+search), `src/i18n` (English and Ukrainian strings), `src/state` (zustand store, local persistence).

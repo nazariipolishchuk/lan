@@ -1,7 +1,11 @@
-// S0 Intro (first visit only; any tap outside the buttons skips it) and S9 Demo tour (PLAN §5.2a, §5.8, 4.6 B).
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react'
+// S0 Intro (first visit only) and S9 Guide: coach marks that walk a newcomer from the map through a field's
+// card to the rotation comparison (PLAN §5.2a, §5.8). The guide is modelled on the MiamiDate onboarding tour:
+// a dimmed screen with the current element cut out, a card with progress dots, and a glide between steps.
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useT, type Key } from '../i18n'
+import type { MapLayer } from '../map/layers'
 import { useStore } from '../state/store'
+import { placeCard, unionBox, visibleBox, type Box } from './guideLayout'
 
 /** The curated demo field and its story (N: P2 showcase fields). */
 export const DEMO_FIELD = '894u6cj46a'
@@ -23,30 +27,34 @@ export function markIntroSeen() {
   }
 }
 
-export function Intro({ onFind, onDemo, onSkip }: { onFind: () => void; onDemo: () => void; onSkip: () => void }) {
+/** The welcome card. It no longer closes on a stray tap outside it: that hid the guide from people who
+ *  touched the map first. Esc and "Skip" still close it. */
+export function Intro({ onFind, onTour, onSkip }: { onFind: () => void; onTour: () => void; onSkip: () => void }) {
   const t = useT()
   const lang = useStore((s) => s.lang)
   const setLang = useStore((s) => s.setLang)
+  const start = useRef<HTMLButtonElement>(null)
   useEffect(() => {
+    start.current?.focus()
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onSkip()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onSkip])
   return (
-    <div className="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title" onClick={onSkip}>
-      <div className="intro-card" onClick={(e) => e.stopPropagation()}>
+    <div className="intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+      <div className="intro-card">
         <p className="intro-brand" id="intro-title">Lan</p>
         <p className="intro-tag">{t('app.tagline')}</p>
         <p className="intro-lead">{t('intro.lead')}</p>
+        <ul className="intro-points">
+          <li><IntroIcon kind="sat" /><span><b>{t('intro.p1.t')}</b> {t('intro.p1')}</span></li>
+          <li><IntroIcon kind="sprout" /><span><b>{t('intro.p2.t')}</b> {t('intro.p2')}</span></li>
+          <li><IntroIcon kind="scales" /><span><b>{t('intro.p3.t')}</b> {t('intro.p3')}</span></li>
+        </ul>
         <div className="intro-actions">
-          <button type="button" className="btn primary" onClick={onFind}>{t('intro.find')}</button>
-          <button type="button" className="btn ghost" onClick={onDemo}>{t('intro.demo')}</button>
+          <button ref={start} type="button" className="btn primary" onClick={onTour}>{t('intro.tour')}</button>
+          <button type="button" className="btn ghost" onClick={onFind}>{t('intro.find')}</button>
         </div>
-        <ol className="intro-steps">
-          <li><b>1</b> {t('intro.step1')}</li>
-          <li><b>2</b> {t('intro.step2')}</li>
-          <li><b>3</b> {t('intro.step3')}</li>
-        </ol>
         <div className="intro-foot">
           <span>{t('intro.nasa')}</span>
           <div className="lang" role="group" aria-label="Language">
@@ -60,54 +68,127 @@ export function Intro({ onFind, onDemo, onSkip }: { onFind: () => void; onDemo: 
   )
 }
 
-interface Step {
-  target: string // data-tour value
-  title: Key
-  text: Key
-  compare: boolean // the step lives on the comparison screen
+/** Line icons for the welcome card (emoji drew differently on every phone). */
+function IntroIcon({ kind }: { kind: 'sat' | 'sprout' | 'scales' }) {
+  const d = {
+    sat: 'M8 8l3 3M5 5l3-3 3 3-3 3zM13 13l3-3 3 3-3 3zM10.5 10.5l3 3M15 4a5 5 0 015 5M15 7a2 2 0 012 2M4 20l4-4',
+    sprout: 'M12 21v-9M12 12c0-4 3-7 8-7 0 5-3 7-8 7zM12 15c0-3-2-5-7-5 0 4 3 5 7 5zM7 21h10',
+    scales: 'M12 4v16M8 20h8M5 7h14M5 7l-3 6a3 3 0 006 0zM19 7l-3 6a3 3 0 006 0zM12 4a1 1 0 100 .01',
+  }[kind]
+  return (
+    <span className="intro-ico" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>
+    </span>
+  )
 }
 
-// history strip → sow next → avoid → risks → compare → combos → My plan
-const STEPS: Step[] = [
-  { target: 'history', title: 'tour.history.t', text: 'tour.history', compare: false },
-  { target: 'sow', title: 'tour.sow.t', text: 'tour.sow', compare: false },
-  { target: 'avoid', title: 'tour.avoid.t', text: 'tour.avoid', compare: false },
-  { target: 'risks', title: 'tour.risks.t', text: 'tour.risks', compare: false },
-  { target: 'lane-balanced', title: 'tour.compare.t', text: 'tour.compare', compare: true },
-  { target: 'combos-balanced', title: 'tour.combos.t', text: 'tour.combos', compare: true },
-  { target: 'myplan', title: 'tour.myplan.t', text: 'tour.myplan', compare: true },
+type Screen = 'map' | 'card' | 'compare'
+
+interface GuideStep {
+  /** data-tour values; the spotlight covers all of them that are on screen */
+  targets: string[]
+  title: Key
+  text: Key
+  screen: Screen
+  /** map layer shown while the step is up (the layer step colours the map so the legend has something to explain) */
+  layer?: MapLayer
+}
+
+// map: search → layers → (opens a field) card head → history → sow next → avoid → risks → compare → my plan
+const GUIDE: GuideStep[] = [
+  { targets: ['search'], title: 'tour.search.t', text: 'tour.search', screen: 'map' },
+  { targets: ['layers', 'legend'], title: 'tour.layers.t', text: 'tour.layers', screen: 'map', layer: 'last' },
+  { targets: ['card-head'], title: 'tour.field.t', text: 'tour.field', screen: 'card' },
+  { targets: ['history'], title: 'tour.history.t', text: 'tour.history', screen: 'card' },
+  { targets: ['sow'], title: 'tour.sow.t', text: 'tour.sow', screen: 'card' },
+  { targets: ['avoid'], title: 'tour.avoid.t', text: 'tour.avoid', screen: 'card' },
+  { targets: ['risks'], title: 'tour.risks.t', text: 'tour.risks', screen: 'card' },
+  { targets: ['lane-balanced'], title: 'tour.compare.t', text: 'tour.compare', screen: 'compare' },
+  { targets: ['myplan'], title: 'tour.myplan.t', text: 'tour.myplan', screen: 'compare' },
 ]
 
-/** Coach marks over the demo field. Every step has "Skip"; the tour waits for its target to render. */
+function scrollParent(el: HTMLElement): HTMLElement | null {
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    const o = getComputedStyle(p).overflowY
+    if ((o === 'auto' || o === 'scroll') && p.scrollHeight > p.clientHeight) return p
+  }
+  return null
+}
+
+const PAD = 6 // spotlight beyond the element
+
+/** Coach marks over the app. The dimmed screen swallows taps; only the card's buttons move the guide. */
 export function Tour({ onEnd }: { onEnd: () => void }) {
   const t = useT()
   const [i, setI] = useState(0)
-  const [rect, setRect] = useState<DOMRect | null>(null)
-  const step = STEPS[i]
+  const [spot, setSpot] = useState<Box | null>(null)
+  const [cardSize, setCardSize] = useState({ w: 340, h: 200 })
+  const [closing, setClosing] = useState(false)
+  const card = useRef<HTMLDivElement>(null)
+  const next = useRef<HTMLButtonElement>(null)
+  const step = GUIDE[i]
+  const last = i === GUIDE.length - 1
 
+  const finish = useCallback(() => setClosing(true), [])
+  useEffect(() => {
+    if (!closing) return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    const timer = window.setTimeout(onEnd, reduce ? 0 : 220)
+    return () => window.clearTimeout(timer)
+  }, [closing, onEnd])
+
+  // Put the app on the screen the step talks about.
   useEffect(() => {
     const s = useStore.getState()
-    if (s.compare !== step.compare) s.setCompare(step.compare)
-    if (!step.compare && s.panel.kind !== 'card') s.openPanel({ kind: 'card' })
-    if (!step.compare && s.sheet === 'peek') s.setSheet('half')
+    const phone = window.innerWidth < 900
+    if (step.screen === 'map') {
+      if (s.compare) s.setCompare(false)
+      if (s.selectedId && phone && s.sheet !== 'peek') s.setSheet('peek')
+    } else {
+      if (!s.selectedId) s.select(DEMO_FIELD)
+      const now = useStore.getState()
+      if (now.compare !== (step.screen === 'compare')) now.setCompare(step.screen === 'compare')
+      if (step.screen === 'card' && now.panel.kind !== 'card') now.openPanel({ kind: 'card' })
+      if (step.screen === 'card' && now.sheet === 'peek') now.setSheet('half')
+    }
+    if (step.layer) {
+      const before = useStore.getState().mapLayer
+      if (before !== step.layer) {
+        useStore.getState().setMapLayer(step.layer)
+        return () => useStore.getState().setMapLayer(before)
+      }
+    }
   }, [step])
 
   const measure = useCallback(() => {
-    const el = document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`)
-    if (!el) return setRect(null)
-    setRect(el.getBoundingClientRect())
+    const vw = window.innerWidth, vh = window.innerHeight
+    const boxes = step.targets
+      .map((k) => document.querySelector(`[data-tour="${k}"]`))
+      .map((el) => (el ? visibleBox(el, vw, vh) : null))
+      .filter((b): b is Box => !!b)
+    const u = unionBox(boxes)
+    if (!u) return setSpot(null)
+    // pad the spotlight, but keep its ring inside the window
+    const x0 = Math.max(2, u.x - PAD), y0 = Math.max(2, u.y - PAD)
+    const x1 = Math.min(vw - 2, u.x + u.w + PAD), y1 = Math.min(vh - 2, u.y + u.h + PAD)
+    setSpot({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 })
   }, [step])
 
+  // Wait for the step's element (data may still be loading), bring it into view, then measure.
   useLayoutEffect(() => {
     let tries = 0
     let timer = 0
+    const settle: number[] = []
     const find = () => {
-      const el = document.querySelector<HTMLElement>(`[data-tour="${step.target}"]`)
+      const el = document.querySelector<HTMLElement>(`[data-tour="${step.targets[0]}"]`)
       if (el) {
-        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
-        window.setTimeout(measure, 350)
-      } else if (tries++ < 40) timer = window.setTimeout(find, 150) // data still loading
-      else setRect(null)
+        const box = scrollParent(el)
+        const tall = box ? el.offsetHeight > box.clientHeight * 0.6 : false
+        el.scrollIntoView({ block: tall ? 'start' : 'center', behavior: 'smooth' })
+        // measure through the scroll and the sheet's resize; the last one is the resting place
+        for (const ms of [60, 200, 400, 700]) settle.push(window.setTimeout(measure, ms))
+      } else if (tries++ < 50) timer = window.setTimeout(find, 150)
+      else setSpot(null)
     }
     find()
     const onMove = () => measure()
@@ -115,43 +196,58 @@ export function Tour({ onEnd }: { onEnd: () => void }) {
     document.addEventListener('scroll', onMove, true)
     return () => {
       window.clearTimeout(timer)
+      settle.forEach((s) => window.clearTimeout(s))
       window.removeEventListener('resize', onMove)
       document.removeEventListener('scroll', onMove, true)
     }
   }, [step, measure])
 
+  // The card's real size, for placing it (the text length differs per step and language).
+  useLayoutEffect(() => {
+    const el = card.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setCardSize({ w: el.offsetWidth, h: el.offsetHeight }))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  useEffect(() => {
+    next.current?.focus({ preventScroll: true })
+  }, [i])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onEnd()
-      else if (e.key === 'ArrowRight') setI((v) => Math.min(v + 1, STEPS.length - 1))
+      if (e.key === 'Escape') finish()
+      else if (e.key === 'ArrowRight') setI((v) => Math.min(v + 1, GUIDE.length - 1))
       else if (e.key === 'ArrowLeft') setI((v) => Math.max(v - 1, 0))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onEnd])
+  }, [finish])
 
-  const last = i === STEPS.length - 1
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  // popover below the target if there is room, otherwise above; on phones pinned to the top or bottom edge
-  const below = rect ? rect.bottom + 190 < vh : true
-  const style: React.CSSProperties = rect
-    ? vw < 640
-      ? (below ? { top: Math.min(rect.bottom + 10, vh - 200), left: 8, right: 8 } : { top: Math.max(8, rect.top - 200), left: 8, right: 8 })
-      : { top: below ? rect.bottom + 10 : Math.max(8, rect.top - 190), left: Math.min(Math.max(8, rect.left), vw - 348) }
-    : { top: vh / 2 - 90, left: Math.max(8, vw / 2 - 170) }
+  const vw = window.innerWidth, vh = window.innerHeight
+  const pos = placeCard(spot, cardSize.w, cardSize.h, vw, vh)
+  const hole = spot ?? { x: vw / 2, y: vh / 2, w: 0, h: 0 }
   return (
-    <div className="tour" role="dialog" aria-live="polite" aria-label={t('tour.label')}>
-      {rect && <div className="tour-ring" style={{ top: rect.top - 6, left: rect.left - 6, width: rect.width + 12, height: rect.height + 12 }} />}
-      <div className="tour-pop" style={style}>
-        <p className="tour-count">{t('tour.count', { i: i + 1, n: STEPS.length })}</p>
+    <div className="tour" role="dialog" aria-modal="true" aria-label={t('tour.label')} data-closing={closing}
+      onPointerDown={(e) => e.target === e.currentTarget && e.preventDefault()}>
+      <div className="tour-hole" data-empty={!spot} style={{ top: hole.y, left: hole.x, width: hole.w, height: hole.h }} />
+      <div className="tour-pop" ref={card} style={pos} aria-live="polite">
+        <div className="tour-head">
+          <span className="tour-dots" aria-hidden="true">
+            {GUIDE.map((_, k) => <i key={k} data-on={k <= i} />)}
+          </span>
+          <span className="tour-count">{t('tour.count', { i: i + 1, n: GUIDE.length })}</span>
+        </div>
         <h3>{t(step.title)}</h3>
         <p>{t(step.text)}</p>
         <div className="tour-nav">
-          <button type="button" className="btn ghost small-btn" onClick={onEnd}>{t('tour.skip')}</button>
+          {!last && <button type="button" className="tour-skip" onClick={finish}>{t('tour.skip')}</button>}
           <span>
-            {i > 0 && <button type="button" className="btn ghost small-btn" onClick={() => setI(i - 1)}>{t('tour.back')}</button>}
-            <button type="button" className="btn primary small-btn" onClick={() => (last ? onEnd() : setI(i + 1))}>{last ? t('tour.done') : t('tour.next')}</button>
+            {i > 0 && <button type="button" className="tour-back" aria-label={t('tour.back')} title={t('tour.back')} onClick={() => setI(i - 1)}>←</button>}
+            <button ref={next} type="button" className="btn primary tour-next" onClick={() => (last ? finish() : setI(i + 1))}>
+              {last ? t('tour.done') : t('tour.next')}
+            </button>
           </span>
         </div>
       </div>

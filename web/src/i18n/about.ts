@@ -26,7 +26,7 @@ export const ABOUT: Record<'en' | 'uk', AboutText> = {
   en: {
     title: 'About Lan',
     intro: 'Lan turns NASA Earth observations into a crop-rotation plan for a single field. Everything below is measured or sourced; where we do not know something, we say so.',
-    replay: 'Replay the intro and the tour',
+    replay: 'Replay the intro and the quick guide',
     steps: {
       h: 'How it works, in three steps',
       items: [
@@ -105,7 +105,7 @@ export const ABOUT: Record<'en' | 'uk', AboutText> = {
   uk: {
     title: 'Про Лан',
     intro: 'Лан перетворює спостереження NASA за Землею на план сівозміни для конкретного поля. Усе нижче виміряно або має джерело; чого ми не знаємо — так і кажемо.',
-    replay: 'Показати вступ і тур ще раз',
+    replay: 'Показати вступ і путівник ще раз',
     steps: {
       h: 'Як це працює, у три кроки',
       items: [

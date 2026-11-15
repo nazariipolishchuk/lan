@@ -122,7 +122,7 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
 
   return (
     <>
-      <header className="card-head">
+      <header className="card-head" data-tour="card-head">
         <h2 className="card-title">
           <span className="ha">{nf(field.ha)}</span> <span className="unit">{t('card.ha')}</span>
         </h2>
