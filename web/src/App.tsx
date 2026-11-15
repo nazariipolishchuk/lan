@@ -37,7 +37,10 @@ function Main() {
 
   const closeAbout = useCallback(() => {
     setAbout(false)
-    if (window.location.hash.startsWith('#/about')) history.replaceState(null, '', `${window.location.pathname}${window.location.search}#/`)
+    // back to the field that was open under About, if any
+    const { selectedId: id, compare: c } = useStore.getState()
+    const back = id ? `#/f/${id}${c ? '/compare' : ''}` : '#/'
+    if (window.location.hash.startsWith('#/about')) history.replaceState(null, '', `${window.location.pathname}${window.location.search}${back}`)
   }, [])
   const openAbout = () => {
     setAbout(true)
@@ -66,7 +69,10 @@ function Main() {
 
   useEffect(() => {
     const onHash = () => {
-      setAbout(window.location.hash.startsWith('#/about'))
+      const isAbout = window.location.hash.startsWith('#/about')
+      setAbout(isAbout)
+      // About opens over the current field: leave the selection (and so the address) alone
+      if (isAbout) return
       const { id, compare: c } = parseHash(window.location.hash)
       const s = useStore.getState()
       if (id !== s.selectedId) s.select(id)

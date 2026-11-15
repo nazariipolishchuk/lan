@@ -115,6 +115,35 @@ export function loadClimate(cell: string, fixture = false, r: Region = 'ua'): Pr
   return get<ClimateCell>(fixture ? `${BASE}fixtures/climate_${cell}.json` : `${baseOf(r)}/climate/${cell}.json`)
 }
 
+/** The eight POWER cells around `cell` (0.5° × 0.625° grid), nearest first: north, east, west, south, then corners. */
+export function neighbourCells(cell: string): string[] {
+  const [la, lo] = cell.split('_').map(Number)
+  const steps = [[0.5, 0], [0, 0.625], [0, -0.625], [-0.5, 0], [0.5, 0.625], [0.5, -0.625], [-0.5, 0.625], [-0.5, -0.625]]
+  return steps.map(([a, b]) => `${(la + a).toFixed(1)}_${(lo + b).toFixed(3)}`)
+}
+
+const missing = (e: unknown) => e instanceof NotFound || e instanceof SyntaxError // dev server answers a missing file with the app page
+
+/**
+ * The field's climate cell. A few coastal cells have no file (POWER put them over the sea); such a field
+ * borrows the nearest neighbouring cell, whose id the Why? charts then show.
+ */
+export async function loadClimateNear(cell: string, fixture = false, r: Region = 'ua'): Promise<ClimateCell> {
+  try {
+    return await loadClimate(cell, fixture, r)
+  } catch (e) {
+    if (fixture || !missing(e)) throw e
+    for (const n of neighbourCells(cell)) {
+      try {
+        return await loadClimate(n, false, r)
+      } catch (e2) {
+        if (!missing(e2)) throw e2
+      }
+    }
+    throw e
+  }
+}
+
 /** Greenness curves of one chunk (contract §7.6), loaded only when Evidence opens. */
 export function loadCurves(id: string): Promise<CurveChunk | null> {
   if (id.startsWith('fixture-')) return Promise.resolve(null)
