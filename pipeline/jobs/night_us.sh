@@ -126,7 +126,7 @@ geojson() {
 }
 
 tiles() {
-  wsl -e bash /mnt/c/Work/SpaceXChallenge/pipeline/jobs/build_tiles_wsl.sh /mnt/c/Work/SpaceXChallenge/data/work/us \
+  MSYS_NO_PATHCONV=1 wsl -e bash /mnt/c/Work/SpaceXChallenge/pipeline/jobs/build_tiles_wsl.sh /mnt/c/Work/SpaceXChallenge/data/work/us \
     /mnt/c/Work/SpaceXChallenge/data/out_us/tiles
   local n
   n=$(ls "$ROOT"/data/out_us/tiles/*.pmtiles 2>/dev/null | wc -l)

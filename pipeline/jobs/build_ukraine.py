@@ -368,7 +368,7 @@ def oblast_layer(scores: dict) -> None:
         src = json.loads((RAW_DIR / "admin" / "ukr_adm1_simplified.geojson").read_text(encoding="utf-8"))
 
     def rnd(c):
-        return [rnd(x) for x in c] if isinstance(c[0], list) else [round(c[0], 3), round(c[1], 3)]
+        return [rnd(x) for x in c] if isinstance(c[0], (list, tuple)) else [round(c[0], 3), round(c[1], 3)]
 
     feats = []
     for ft in src["features"]:
