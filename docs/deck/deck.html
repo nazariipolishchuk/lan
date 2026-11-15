@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lan — NASA Space Apps 2026, Field Shift</title>
+<style>
+@font-face { font-family: "Onest"; src: url(fonts/onest-latin-wght-normal.woff2) format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Unbounded"; src: url(fonts/unbounded-latin-wght-normal.woff2) format("woff2"); font-weight: 200 900; }
+@page { size: 1920px 1080px; margin: 0; }
+:root {
+  --night: #030d0f; --panel: #071518; --raise: #0c2024; --line: #1c3a40;
+  --chalk: #e8eeea; --frost: #9bc2d7; --gold: #e1bc64; --go: #8cc98a; --stop: #e3826f; --warn: #d99a5b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--night); }
+body { font-family: "Onest", system-ui, sans-serif; color: var(--chalk); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.slide { width: 1920px; height: 1080px; position: relative; overflow: hidden; page-break-after: always; break-after: page; background: var(--night); padding: 88px 112px; }
+.slide:last-child { page-break-after: auto; break-after: auto; }
+h1, h2, .word { font-family: "Unbounded", "Onest", sans-serif; font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 60px; line-height: 1.12; margin-bottom: 28px; }
+.kicker { font-size: 24px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin-bottom: 22px; font-weight: 600; }
+p, li { font-size: 30px; line-height: 1.42; }
+.muted { color: var(--frost); }
+.gold { color: var(--gold); }
+.go { color: var(--go); }
+.stop { color: var(--stop); }
+.foot { position: absolute; left: 112px; right: 112px; bottom: 44px; display: flex; justify-content: space-between; font-size: 20px; color: var(--frost); }
+.foot b { font-family: "Unbounded", sans-serif; color: var(--gold); font-weight: 700; }
+.shot { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.55); }
+.shot img { display: block; width: 100%; }
+ul.plain { list-style: none; }
+ul.plain li { padding-left: 34px; position: relative; margin-bottom: 18px; }
+ul.plain li::before { content: ""; position: absolute; left: 0; top: 17px; width: 14px; height: 14px; border-radius: 4px; background: var(--gold); }
+ul.plain.b-go li::before { background: var(--go); }
+ul.plain.b-stop li::before { background: var(--stop); }
+.num { font-family: "Unbounded", sans-serif; font-weight: 700; color: var(--gold); }
+
+/* 1 title */
+.title { padding: 0; }
+.title .bg { position: absolute; inset: -60px 0 0 0; background: url(img/map-drought.png) 70% 60% / 125% no-repeat; opacity: .9; }
+.title .veil { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(3,13,15,.98) 0%, rgba(3,13,15,.9) 40%, rgba(3,13,15,.35) 70%, rgba(3,13,15,.1) 100%); }
+.title .in { position: absolute; left: 112px; top: 150px; width: 1060px; }
+.title .word { font-size: 210px; color: var(--gold); line-height: 1; letter-spacing: -0.03em; }
+.title .tag { font-family: "Unbounded", sans-serif; font-size: 50px; font-weight: 600; line-height: 1.2; margin: 36px 0 40px; }
+.title .lead { font-size: 32px; color: var(--chalk); max-width: 980px; }
+.title .meta { margin-top: 64px; font-size: 26px; color: var(--frost); line-height: 1.6; }
+.title .meta b { color: var(--chalk); font-weight: 600; }
+
+/* 2 problem */
+.two { display: grid; grid-template-columns: 820px 1fr; gap: 64px; align-items: start; }
+.prob { margin-top: 18px; }
+.prob li { margin-bottom: 26px; }
+.note { margin-top: 30px; font-size: 26px; color: var(--frost); border-left: 4px solid var(--gold); padding-left: 24px; }
+
+/* 3 & 5 big shots */
+.big h2 { font-size: 50px; margin-bottom: 12px; }
+.big .sub { font-size: 27px; color: var(--frost); margin-bottom: 30px; max-width: 1650px; }
+.big .shot { width: 1696px; height: 720px; }
+.big .shot img { width: 1696px; }
+.side { display: grid; grid-template-columns: 1180px 1fr; gap: 48px; align-items: start; }
+.side .shot { width: 1180px; height: auto; }
+.side .shot img { width: 1180px; }
+.side .co { width: auto; font-size: 25px; }
+.side .callouts { position: static; gap: 22px; }
+.callouts { position: absolute; display: flex; flex-direction: column; gap: 16px; }
+.co { background: rgba(7,21,24,.94); border: 1px solid var(--gold); border-radius: 14px; padding: 16px 22px; font-size: 23px; line-height: 1.35; width: 520px; box-shadow: 0 16px 40px rgba(0,0,0,.5); }
+.co b { color: var(--gold); font-weight: 650; }
+
+/* 4 how */
+.flow { display: grid; grid-template-columns: 1fr 70px 1fr 70px 1fr; align-items: stretch; margin-top: 30px; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 30px 32px; }
+.box h3 { font-family: "Unbounded", sans-serif; font-size: 26px; color: var(--gold); margin-bottom: 18px; font-weight: 650; }
+.box p, .box li { font-size: 24px; line-height: 1.45; }
+.box ul { list-style: none; }
+.box li { margin-bottom: 10px; }
+.arrow { display: flex; align-items: center; justify-content: center; font-size: 54px; color: var(--gold); }
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 44px; }
+.stat { border-top: 3px solid var(--gold); padding-top: 16px; }
+.stat .num { font-size: 50px; display: block; margin-bottom: 6px; }
+.stat span { font-size: 22px; color: var(--frost); line-height: 1.35; display: block; }
+
+/* 6 accuracy */
+.acc { display: grid; grid-template-columns: 1fr 1fr; gap: 40px 64px; margin-top: 16px; }
+.acc .box { padding: 28px 34px; }
+.acc .box p, .acc .box li { font-size: 26px; }
+table { font-size: 25px !important; }
+.big-num { font-family: "Unbounded", sans-serif; font-size: 76px; font-weight: 700; color: var(--gold); line-height: 1; }
+table { border-collapse: collapse; width: 100%; margin-top: 14px; font-size: 22px; }
+td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+td:last-child { text-align: right; font-weight: 650; }
+
+/* 7 close */
+.cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 36px; margin-top: 22px; }
+.cols3 .box p, .cols3 .box li { font-size: 27px; }
+.links { margin-top: 48px; display: flex; gap: 60px; font-size: 30px; }
+.links span { color: var(--frost); font-size: 22px; display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .12em; }
+.links b { color: var(--gold); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- 1. Title -->
+<section class="slide title">
+  <div class="bg"></div><div class="veil"></div>
+  <div class="in">
+    <div class="word">Lan</div>
+    <div class="tag">Tap a field. See its past.<br>Plan its future.</div>
+    <p class="lead">A crop-rotation planner for any field in Ukraine and the 48 contiguous US states, built on NASA Earth observations.</p>
+    <div class="meta">
+      <b>NASA Space Apps Challenge 2026 · Field Shift</b><br>
+      Team Lan · live at <b>nazariipolishchuk.github.io/lan</b>
+    </div>
+  </div>
+</section>
+
+<!-- 2. Problem -->
+<section class="slide">
+  <div class="two">
+    <div>
+      <div class="kicker">The problem</div>
+      <h2>Rotation mistakes are made once and paid for years</h2>
+      <ul class="plain b-stop prob">
+        <li>A crop returned too soon: Ukraine's Resolution No.&nbsp;164 allows sunflower on the same field only after 7 seasons.</li>
+        <li>A winter crop sown after a late harvest, or a dry soil profile left for the next crop.</li>
+        <li>Advice comes from national averages, not from <b>this field's own past</b> or <b>its district's changing climate</b>.</li>
+      </ul>
+      <p class="note">"Lan" is Ukrainian for a large farm field. Ukraine is our home; the method is not tied to it.</p>
+    </div>
+    <div>
+      <div class="shot"><img src="img/map-drought.png" alt=""></div>
+      <p class="muted" style="font-size:22px; margin-top:16px;">Lan's drought layer: summers out of the last 20 with a July water balance below −150&nbsp;mm (NASA POWER). Rare in the west, almost every year in the south-east.</p>
+    </div>
+  </div>
+  <div class="foot"><span><b>Lan</b> · Field Shift</span><span>2 / 7</span></div>
+</section>
+
+<!-- 3. Field card -->
+<section class="slide big">
+  <div class="kicker">The product · one field</div>
+  <h2>Tap a field: its past, what to sow next, what to avoid</h2>
+  <p class="sub">Every field already has its outline. The card shows eleven seasons of history, ranks the next crop and says why.</p>
+  <div class="shot"><img src="img/card.png" alt="Field card of a 101 ha field in Vinnytsia oblast"></div>
+  <div class="callouts" style="left: 140px; top: 470px;">
+    <div class="co"><b>Its past:</b> 2016–2026 from NASA HLS greenness — winter crop, summer crop or bare. "?" marks an unsure year; the farmer can correct any year.</div>
+    <div class="co"><b>Sow next:</b> local crops scored 0–100 on water, heat, soil and disease. A score, not a yield forecast. The farmer chooses.</div>
+    <div class="co"><b>Honest about gaps:</b> "the satellite suspects sunflower in 2021, 2023 — if so, too early until 2031. Confirm."</div>
+  </div>
+  <div class="foot"><span><b>Lan</b> · live screenshot, demo field 8a9alcg08c</span><span>3 / 7</span></div>
+</section>
+
+<!-- 4. How it works -->
+<section class="slide">
+  <div class="kicker">How it works</div>
+  <h2>NASA data in, a transparent plan out</h2>
+  <div class="flow">
+    <div class="box">
+      <h3>Data</h3>
+      <ul>
+        <li><b>NASA HLS</b> (Landsat + Sentinel-2, 30&nbsp;m, 2016–2026): greenness of every field every 10 days</li>
+        <li><b>NASA POWER</b>: 35 years of daily weather per cell</li>
+        <li><b>NASADEM</b> slope, <b>SoilGrids</b> soil</li>
+        <li>Outlines: Fields of The World (Ukraine), USDA Crop Sequence Boundaries (USA)</li>
+      </ul>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box">
+      <h3>History</h3>
+      <ul>
+        <li>A classifier (gradient boosting) reads each season's greenness curve: <b>winter / summer / bare</b></li>
+        <li>Crop names only as "maybe …" hints</li>
+        <li>USA 2018–2025: the published USDA Cropland Data Layer, not our model</li>
+      </ul>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box">
+      <h3>Rules, in the browser</h3>
+      <ul>
+        <li>Crop calendars from the cell's own temperatures</li>
+        <li>Return intervals, predecessors, late harvests, combos</li>
+        <li>Risks as "x of the last N years"</li>
+        <li>Each rule shows its source</li>
+      </ul>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="num">597,203</span><span>Ukrainian fields with an eleven-season history</span></div>
+    <div class="stat"><span class="num">15.97 M</span><span>US fields, 48 contiguous states</span></div>
+    <div class="stat"><span class="num">35 years</span><span>of NASA POWER weather behind every risk</span></div>
+    <div class="stat"><span class="num">0 servers</span><span>a static site; nothing the farmer enters leaves the browser</span></div>
+  </div>
+  <div class="foot"><span><b>Lan</b> · Field Shift</span><span>4 / 7</span></div>
+</section>
+
+<!-- 5. Compare -->
+<section class="slide big">
+  <div class="kicker">The product · the next seasons</div>
+  <h2>Compare rotations on one calendar</h2>
+  <p class="sub">"As now", "Balanced", "Drought-proof" and the farmer's own plan, scored on the same four bars. Good and bad crop sequences show up as combos, each with its reason and source.</p>
+  <div class="side">
+    <div class="shot"><img src="img/compare.png" alt="Rotation comparison for the demo field"></div>
+    <div class="callouts">
+      <div class="co"><b>As now</b> continues the field's own pattern from the next step that can still be sown — the honest baseline. Here: 50 / 100.</div>
+      <div class="co"><b>Balanced</b> (79) and <b>Drought-proof</b> are found by checking every possible plan; plans that break a rule are dropped.</div>
+      <div class="co"><b>Climate switch:</b> all 35 years, the last 10, or dry years only. The ranking can change.</div>
+    </div>
+  </div>
+  <div class="foot"><span><b>Lan</b> · live screenshot, demo field 8a9alcg08c</span><span>5 / 7</span></div>
+</section>
+
+<!-- 6. Accuracy -->
+<section class="slide">
+  <div class="kicker">Validation, including what failed</div>
+  <h2>Measured, not assumed</h2>
+  <div class="acc">
+    <div class="box">
+      <div class="big-num">95.3 %</div>
+      <p style="margin-top:12px;">winter / summer / bare agreement with independent KPI / World Bank crop maps (2019–2024), 24,626 held-out field-seasons in Cherkasy. One held-out tile per zone:</p>
+      <table>
+        <tr><td>Dnipropetrovsk, central steppe</td><td>95.0 %</td></tr>
+        <tr><td>Kharkiv, east</td><td>94.2 %</td></tr>
+        <tr><td>Volyn, north-west</td><td>88.6 %</td></tr>
+        <tr><td>Lviv, west</td><td>87.2 %</td></tr>
+        <tr><td>Odesa, dry south</td><td class="stop">79.3 %</td></tr>
+      </table>
+    </div>
+    <div class="box">
+      <h3 style="font-family:Unbounded; color:var(--stop); font-size:26px; margin-bottom:14px;">What did not work</h3>
+      <ul class="plain b-stop">
+        <li><b>Bare fields</b> are the weak class (F1 ≈ 0.2).</li>
+        <li><b>Crop names:</b> two models trained on US labels gave implausible crop shares in Ukraine — dropped. A model on the 2020 Ukrainian crop map reaches summer macro-F1 0.83, but its shares swing in the 2024 drought, so names stay "maybe" hints and never feed the rules.</li>
+        <li><b>USA:</b> history is USDA's own map; our 2026 season is not yet checked there.</li>
+      </ul>
+      <p class="muted" style="margin-top:8px;">Limits: weather ≈ 50&nbsp;km, soil 250&nbsp;m; no nitrogen, weeds, pests or prices. Lan supports an agronomist; it does not replace one.</p>
+    </div>
+  </div>
+  <div class="foot"><span><b>Lan</b> · numbers from docs/VALIDATION.md</span><span>6 / 7</span></div>
+</section>
+
+<!-- 7. Close -->
+<section class="slide">
+  <div class="kicker">Who it is for, what is next, who made it</div>
+  <h2>A second opinion from space, for every field</h2>
+  <div class="cols3">
+    <div class="box">
+      <h3>For</h3>
+      <p>Farmers and agronomists planning the next seasons — on a phone, with nothing to install. The farmer has the final say: correct any season and the plan recalculates at once.</p>
+    </div>
+    <div class="box">
+      <h3>Next</h3>
+      <ul class="plain b-go">
+        <li>Farmers' corrections as ground truth</li>
+        <li>A second label year for crop names (EU crop map 2022)</li>
+        <li>A source for every rule value</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>Team &amp; SI use</h3>
+      <p>Team Lan, two people. The product idea and every decision are the team's. An SI coding assistant (Claude Code) wrote code and text drafts and suggested reading history from greenness curves; recommendations come from transparent rules, not a language model.</p>
+    </div>
+  </div>
+  <div class="links">
+    <div><span>Live site</span><b>nazariipolishchuk.github.io/lan</b></div>
+    <div><span>Code (MIT)</span><b>github.com/nazariipolishchuk/lan</b></div>
+  </div>
+  <div class="foot"><span><b>Lan</b> · NASA Space Apps Challenge 2026 · Field Shift</span><span>7 / 7</span></div>
+</section>
+
+</body>
+</html>
