@@ -74,6 +74,7 @@ Times are Europe/Kyiv.
 
 | When | Fork | Why |
 |---|---|---|
+| Sun 11:05 | **Demo = 7 slides (PDF on Google Drive), not a 30 s video** (D14 changed by N). Rule C2 allows either. Of the 10 Space Apps 2025 Global Winners, 6 linked a video and 3 a deck (Twisters, Best Use of Technology: a 7-page PDF on Drive; Gaia+LEO: PDF; Photonic Force: Canva); one file was gone. Format did not decide the awards; a deck carries the accuracy numbers and limits and fits the remaining time. Slides 3 and 5 use large screenshots of the live UI, since judges may never open the site | N, 11:05 |
 | Sat 12:38 | **CSB on Source Cooperative (fiboa edition) carries one crop per field, for 2023 only**, not the 8-year sequence of the USDA original. Enough for training and V2; the Red River subset (bbox −97.6…−96.3° E, 46.4…48.1° N) is 103,793 fields, 84,311 of them ≥ 2 ha, read row group by row group (4.3 GB file, 185 s) | Measured |
 | Sat 12:45 | Curves: looks in one dekad averaged; gaps ≤ 4 dekads interpolated, longer gaps stay missing, no extrapolation; 1-2-1 smoothing. Fields in two tiles merge both tiles' looks; the tile with most looks is the field's "home tile" for spatial splits. Median 24 of 27 dekads per field-year; 0.1 % have fewer than 12 (→ "?") | Measured |
 | Sat 12:50 | **Group model unweighted** (no `class_weight`): balanced weights made 13 % of summer fields "uncultivated" (precision 18 %); unweighted: agreement 95.3 %, uncultivated precision 49 %, recall 14 % | VALIDATION.md |

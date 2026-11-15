@@ -45,7 +45,7 @@ Update this table at every checkpoint. It is the single source of truth after a 
 | Night | Sun 02:00–08:00 | VPS processes the rest of Ukraine; people sleep | ☑ not needed: HLS for all Ukraine finished Sat 20:48, ingested and deployed by 21:45 |
 | P5 Ingest + human validation | Sun 08:00–11:00 | Wider coverage live; validation numbers; bug list | ☐ |
 | P6 Fix and freeze | Sun 11:00–15:00 | Insurance submission at 12:00; feature freeze 14:00 | ☐ |
-| P7 Presentation | Sun 15:00–18:30 | Video ≤ 30 s, project page text and images, README | ☐ |
+| P7 Presentation | Sun 15:00–18:30 | 7-slide PDF deck (D14 changed), project page text and images, README | ☐ |
 | P8 Submit | Sun 18:30–20:30 | "Submit for Judging" done and verified | ☐ |
 | P9 Buffer + wrap | Sun 20:30–23:00 | Only critical fixes; final freeze 23:00 | ☐ |
 
@@ -162,7 +162,7 @@ The site must stay online until at least the end of January 2027.
 | D11 | Crops: winter wheat, winter barley, spring barley, grain maize, sunflower, soybean, sugar beet, winter rapeseed; drought alternatives peas, chickpea, sorghum; slots fallow and cover crop | N, 14 Nov |
 | D12 | Third-party open data is allowed and cited; NASA data stays at the core | N, 14 Nov |
 | D13 | Field boundaries come from Fields of The World (CC-BY-4.0), not drawn by hand | N, 13 Nov |
-| D14 | Demo format: a video of at most 30 s. Final project link: the live site. Repository public | N, 14 Nov |
+| D14 | Demo format: ~~a video of at most 30 s~~ **a deck of 7 slides as a PDF on Google Drive** (changed Sun 15 Nov, see DECISIONS). Final project link: the live site. Repository public | N, 14 Nov; changed by N, 15 Nov |
 | D15 | Unattended overnight processing on the VPS is allowed | N, 14 Nov (2A) |
 | D16 | Roles: C builds; N decides, labels known fields, writes and voices, submits; T tests, gives design feedback, edits the video | N, 14 Nov |
 | D17 | Logo: `logo/final-v3`. It derives from a Gemini image, so it carries a visible "SI-assisted" mark wherever it appears | N, 3 Nov; rule C6 |
