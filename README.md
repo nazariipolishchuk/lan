@@ -140,5 +140,7 @@ VITE_DATA_BASE=https://nazariipolishchuk.github.io/lan-data npm run dev
 
 Team Lan, two people. The idea and every product decision are the team's. The code was written with
 the help of Claude Code (Anthropic). The logo started from an AI image. Details are in
-[`docs/SI_USE.md`](docs/SI_USE.md). Licence: MIT ([`LICENSE`](LICENSE)). Data licences are listed in
+[`docs/SI_USE.md`](docs/SI_USE.md). Licence: MIT ([`LICENSE`](LICENSE)) for our own code and texts. Not covered by
+it: the fonts in `docs/deck/fonts` (SIL Open Font License 1.1, licence files next to them), the logo (SI-assisted, based
+on a Google Gemini image) and all data, whose licences are listed in [`docs/REFERENCES.md`](docs/REFERENCES.md) and on
 the app's About screen.
