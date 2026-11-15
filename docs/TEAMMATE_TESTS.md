@@ -9,8 +9,9 @@ Use a private window the first time, so you see the intro as a new visitor.
 
 ## 1. First minute (phone)
 1. Open the link. Read the intro screen. Can you say in one sentence what the site does?
-2. Press "Try a demo field". Go through the 7-step tour. Did any step point at the wrong place, hide
-   the thing it talks about, or run off the screen?
+2. Press "Show me how · 1 min". Go through the 9-step guide (map, field card, comparison). Did any step
+   point at the wrong place, hide the thing it talks about, or run off the screen? Did you understand
+   what to do next after the last step?
 3. Open the link again and press "Find my field". Type a village you know (in Ukrainian and in
    Latin letters). Did it find it? Did the map fly there?
 

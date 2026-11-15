@@ -509,6 +509,9 @@ table.change thead th { color: var(--frost); font-weight: 400; }
   .lang button { min-height: 42px; min-width: 40px; }
   .icon-btn { width: 44px; height: 44px; }
   .mini-btn { min-height: 44px; padding-inline: 12px; }
+  /* second pass (15 Nov): risk lines, watch dates, climate switch, combo chips and small buttons were 21–32 px tall */
+  .linklike { min-height: 40px; }
+  .seg button, .chip, .small-btn, .unsafe-btn { min-height: 40px; }
 }
 @media (max-width: 480px) {
   .topbar { gap: 6px; padding: 6px 8px; }
