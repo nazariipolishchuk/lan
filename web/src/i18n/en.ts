@@ -65,6 +65,7 @@ export const en = {
   'sow.why.anti': "Bad pair: {what}",
   'sow.why.better': "Better than the other options on {bar}: {v}",
   'sow.why.worse': "Weaker than the others on {bar}: {v}",
+  'sow.why.hinted': 'Check first: the satellite suspects it in {years}; if so, it is too early until {from}. Confirm with “Edit”',
   'sow.why.even': "No clear difference from the other options",
   'ev.green.title': "How green the field was in {y}",
   'ev.green.what': "Greenness is the share of green leaf a satellite sees: 0 = bare soil, 0.8 = a dense crop.",
