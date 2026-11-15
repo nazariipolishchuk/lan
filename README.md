@@ -32,10 +32,10 @@ once. Nothing the farmer enters leaves the browser.
    first-visit screen again.
 2. On the welcome screen press **"Show me how · 1 min"**. A 9-step guide highlights each part of the
    app in turn: search, map layers, a field's card, its history, what to sow, what to avoid, risks,
-   the rotation comparison and your own plan. Skip or go back at any step. You can replay it later
-   from **About → Replay the intro and the quick guide**.
+   the rotation comparison and your own plan. Skip or go back at any step. You can start it again at any
+   time with the **? Guide** button in the top bar.
 3. Or explore on your own:
-   - Type a village or town in the search box (Ukrainian or Latin letters, for example `Dubova`,
+   - Type the name of a place in the search box (Ukrainian or Latin letters, for example `Dubova`,
      `Умань`, `Poltava`), or press ◎ to go to where you are.
    - While zoomed out, the chips **Latest season / Drought / Rotation** colour the whole country. The
      legend explains the colours.
@@ -47,8 +47,8 @@ Direct links:
 | What | Link |
 |---|---|
 | The demo field with the guide | https://nazariipolishchuk.github.io/lan/?demo=1 |
-| The demo field's card | https://nazariipolishchuk.github.io/lan/#/f/894u6cj46a |
-| Its rotation comparison | https://nazariipolishchuk.github.io/lan/#/f/894u6cj46a/compare |
+| The demo field's card | https://nazariipolishchuk.github.io/lan/#/f/8a9alcg08c |
+| Its rotation comparison | https://nazariipolishchuk.github.io/lan/#/f/8a9alcg08c/compare |
 | Ukrainian interface | https://nazariipolishchuk.github.io/lan/?lang=uk |
 | About, sources and validation | https://nazariipolishchuk.github.io/lan/#/about |
 

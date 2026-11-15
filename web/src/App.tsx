@@ -85,6 +85,9 @@ function Main() {
         <p className="tagline">{t('app.tagline')}</p>
         <div className="top-actions">
           <DateChip />
+          <button type="button" className="about-btn guide-btn" onClick={startTour} disabled={tour} aria-label={t('top.guide')} title={t('top.guide')}>
+            <span aria-hidden="true">?</span><span className="about-label">{t('top.guideShort')}</span>
+          </button>
           <button type="button" className="about-btn" onClick={openAbout} aria-label={t('top.about')} title={t('top.about')}>
             <span aria-hidden="true">ⓘ</span><span className="about-label">{t('top.aboutShort')}</span>
           </button>

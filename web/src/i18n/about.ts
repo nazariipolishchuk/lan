@@ -47,7 +47,7 @@ export const ABOUT: Record<'en' | 'uk', AboutText> = {
         ['ISRIC SoilGrids 2.0', 'Clay, sand, organic carbon, pH', '250 m', 'model of 2020'],
         ['Crop type map of Ukraine 2020 (Chen, Tu et al. 2024)', 'Training the crop-name hints in Ukraine (maize, sunflower, rapeseed)', '10 m', '2020'],
         ['USDA Crop Sequence Boundaries', 'Crop history in the USA', 'fields', '2018–2025'],
-        ['GeoNames, geoBoundaries', 'Village search, oblast outlines', '—', '2017–2026'],
+        ['GeoNames, geoBoundaries', 'Place search, oblast outlines', '—', '2017–2026'],
       ],
     },
     accuracy: {
@@ -126,7 +126,7 @@ export const ABOUT: Record<'en' | 'uk', AboutText> = {
         ['ISRIC SoilGrids 2.0', 'Глина, пісок, органічний вуглець, pH', '250 м', 'модель 2020 р.'],
         ['Карта культур України 2020 (Chen, Tu et al. 2024)', 'Навчання підказок назв культур в Україні (кукурудза, соняшник, ріпак)', '10 м', '2020'],
         ['USDA Crop Sequence Boundaries', 'Історія культур у США', 'поля', '2018–2025'],
-        ['GeoNames, geoBoundaries', 'Пошук сіл, межі областей', '—', '2017–2026'],
+        ['GeoNames, geoBoundaries', 'Пошук населених пунктів, межі областей', '—', '2017–2026'],
       ],
     },
     accuracy: {

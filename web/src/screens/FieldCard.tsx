@@ -135,9 +135,7 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
       </header>
 
       <section className="row" aria-labelledby="was" data-tour="history">
-        <h3 id="was" className="row-label">{t('card.was')} <Info k="info.was" />
-          <button type="button" className="mini-btn" onClick={() => openPanel({ kind: 'history' })}>{t('card.edit')}</button>
-        </h3>
+        <h3 id="was" className="row-label">{t('card.was')} <Info k="info.was" /></h3>
         {field.hist.length || model.seasons.some((s) => s.farmer) ? (
           <ol className="strip">
             {model.seasons.map((s) => {
@@ -164,6 +162,8 @@ function CardBody({ data, model }: { data: Loaded; model: CardModel }) {
         ) : (
           <p className="muted">{field.flags.includes('no_history') ? t('card.historyPending') : t('card.noHistory')}</p>
         )}
+        {/* under the strip: in the 64 px label column a longer label ("Виправити") ran over the years */}
+        <button type="button" className="mini-btn strip-edit" onClick={() => openPanel({ kind: 'history' })}>✎ {t('card.edit')}</button>
       </section>
 
       <section className="row">

@@ -7,8 +7,8 @@ import type { MapLayer } from '../map/layers'
 import { useStore } from '../state/store'
 import { placeCard, unionBox, visibleBox, type Box } from './guideLayout'
 
-/** The curated demo field and its story (N: P2 showcase fields). */
-export const DEMO_FIELD = '894u6cj46a'
+/** The demo field: Vinnytsia, 101 ha, a clean winter wheat ↔ summer crop rotation over eleven seasons (picked 15 Nov). */
+export const DEMO_FIELD = '8a9alcg08c'
 const SEEN_KEY = 'lan.intro'
 
 export function introSeen(): boolean {
@@ -129,6 +129,14 @@ export function Tour({ onEnd }: { onEnd: () => void }) {
   const step = GUIDE[i]
   const last = i === GUIDE.length - 1
 
+  // the field open when the guide started: phones hide the map chips under an open card, so the map steps
+  // close it for a moment and the guide puts it back at the end
+  const prior = useRef(useStore.getState().selectedId)
+  useEffect(() => () => {
+    const s = useStore.getState()
+    if (prior.current && s.selectedId !== prior.current) s.select(prior.current)
+  }, [])
+
   const finish = useCallback(() => setClosing(true), [])
   useEffect(() => {
     if (!closing) return
@@ -143,9 +151,9 @@ export function Tour({ onEnd }: { onEnd: () => void }) {
     const phone = window.innerWidth < 900
     if (step.screen === 'map') {
       if (s.compare) s.setCompare(false)
-      if (s.selectedId && phone && s.sheet !== 'peek') s.setSheet('peek')
+      if (s.selectedId && phone) s.select(null)
     } else {
-      if (!s.selectedId) s.select(DEMO_FIELD)
+      if (!s.selectedId) s.select(prior.current ?? DEMO_FIELD)
       const now = useStore.getState()
       if (now.compare !== (step.screen === 'compare')) now.setCompare(step.screen === 'compare')
       if (step.screen === 'card' && now.panel.kind !== 'card') now.openPanel({ kind: 'card' })

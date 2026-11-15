@@ -15,7 +15,7 @@ const here = fileURLToPath(new URL('.', import.meta.url))
 const data = join(here, '..', '..', 'public', 'data')
 const has = existsSync(join(data, 'fields'))
 const TODAY = new Date(2026, 10, 14)
-const SHOWCASE = ['894u6cj46a', '8bohkcn1oa', '89e3pcioxe']
+const SHOWCASE = ['8a9alcg08c', '894u6cj46a', '8bohkcn1oa', '89e3pcioxe']
 
 function load(id: string) {
   const ck = chunkOfId(id)!
