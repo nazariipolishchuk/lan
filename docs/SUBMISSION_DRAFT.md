@@ -105,8 +105,9 @@ is an estimate and says so.
   sources, planning support, writing the pipeline and web code, and drafting English texts, which the
   team reviewed and edited. The plan document was written with it before the 09:00 start; code and
   data work began on 14 Nov.
-- The logo is based on an image generated with Google Gemini, redrawn as vector by our code, and
-  carries a visible "SI-assisted" mark.
+- The logo (the "LAN" wordmark with a wheat ear) is SI-assisted: it is based on an image generated with
+  Google Gemini and redrawn as vector by our code. The app and the demo deck use only the plain text
+  name "Lan".
 - The product contains three machine-learning models trained by us on open labels, each with its
   accuracy reported: the season-group classifier (winter / summer / not cultivated) and two crop-name
   classifiers (summer and winter crops) whose output is shown only as hints. Recommendations come from

@@ -5,7 +5,7 @@ The idea of the solution came from the team; see PLAN.md §3 "Idea provenance".
 
 | Where | Tool | What it did | Human role |
 |---|---|---|---|
-| Logo base image | Google Gemini | Generated a grain image; our script traced and vectorised it into `logo/final-v3` | Team chose the concept, the shape and the final version; every display carries an "SI-assisted" mark |
+| Logo base image | Google Gemini | Generated a grain image; our script traced and vectorised it into `logo/final-v3` | Team chose the concept, the shape and the final version. The app and the demo deck show only the text name; where the logo image is shown it must carry an "SI-assisted" mark |
 | `docs/PLAN.md` | Claude (Anthropic) | Turned the team's decisions into a written plan on 14 Nov, 02:40–03:00, before the 09:00 start (no code, no data) | Team made every product decision listed in §3 |
 | Code, pipeline, data processing | Claude Code (Anthropic) | Writes code, tests and pipeline scripts | Team reviews, tests and decides |
 | Ideas adopted from SI | Claude (Anthropic) | Suggested in discussion: reconstructing crop history from yearly greenness curves with a classifier, the timeline-lanes comparison, the climate-scenario switch and the "x of N years" wording, the choice of datasets, stack and validation design (full split in PLAN.md §3) | Team weighed each suggestion and adopted these; the product idea and every other decision are the team's |
