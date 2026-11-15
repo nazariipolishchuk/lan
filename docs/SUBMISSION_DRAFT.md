@@ -1,8 +1,9 @@
 # Project page draft (task 3.7)
 
 Draft text for the Space Apps project page, in English. N reviews and rewrites it in his own words;
-`[LINK …]` placeholders are filled at P7/P8; numbers marked *(P5)* change after the all-Ukraine ingest.
-Every number below is measured (sources: `docs/VALIDATION.md`, `data/out/meta.json`); none is invented.
+the one `[LINK …]` left is the demo deck, filled when the PDF is on Google Drive (D14).
+Every number below is measured (sources: `docs/VALIDATION.md`, `data/out/meta.json`, `data/out_us/meta.json`);
+none is invented.
 
 ---
 
@@ -21,9 +22,12 @@ sequences, each with its reason and source.
 
 It answers Field Shift by giving a farmer a second opinion grounded in their own field's past and their
 district's changing climate, not in national averages. Crop history comes from NASA HLS greenness
-(30 m, Landsat + Sentinel-2, 2016–2026) for 597,488 fields across all of Ukraine; NASA POWER gives 35 years of daily climate per cell. Winter/summer/fallow history agrees with
-independent Ukrainian crop maps for 95 % of field-seasons on held-out areas of the training region
-and for 79–95 % in five other zones (weakest in the dry south).
+(30 m, Landsat + Sentinel-2, 2016–2026) for 597,203 fields across all of Ukraine; NASA POWER gives
+35 years of daily climate per cell. Winter/summer/fallow history agrees with independent Ukrainian crop
+maps for 95 % of field-seasons on held-out areas of the training region and for 79–95 % in five other
+zones (weakest in the dry south). The same app covers the 48 contiguous US states (15,973,095 fields):
+there the 2018–2025 history is the USDA Cropland Data Layer, a published crop map, and only the 2026
+season is our estimate.
 
 It matters because rotation mistakes are made once and paid for years: a crop returned too soon, a
 winter crop sown after a late harvest, a dry profile left behind. Every recommendation names its
@@ -32,16 +36,17 @@ the plan recalculates at once. Nothing the farmer enters leaves the browser.
 
 ## Link to Project Demo
 
-[LINK video ≤ 30 s]
+[LINK demo: 7-slide PDF deck on Google Drive]
 
 ## Link to Final Project
 
-[LINK live site] · code: [LINK repository]
+Live site: https://nazariipolishchuk.github.io/lan/ · code: https://github.com/nazariipolishchuk/lan
 
 ## Detailed Project Description
 
 **What it does**
-- Map of field outlines (Fields of The World) over Ukraine; tap a field to open its card.
+- Map of field outlines over Ukraine (Fields of The World) and the 48 contiguous US states (USDA Crop
+  Sequence Boundaries); tap a field to open its card.
 - History strip: eleven seasons per field, each a satellite estimate with its confidence; "?" where
   clouds left too few clear looks. The farmer can correct any year.
 - "Sow next": crops grown nearby, each with a 0–100 season score (water, heat, soil, disease — not a
@@ -68,11 +73,17 @@ scores every candidate plan. The site is static (GitHub Pages); all scoring runs
 - Winter/summer/fallow: accuracy 95.3 % against the KPI / World Bank crop maps (2019–2024) on
   held-out tiles (24,626 field-seasons); fallow is the weak class (F1 0.22). Outside the training
   oblast: Dnipropetrovsk 95.0 %, Kharkiv 94.2 %, Volyn 88.6 %, Lviv 87.2 %, Odesa 79.3 %.
-- Crop names: a model trained on USDA Crop Sequence Boundaries reached accuracy 85.5 % (macro-F1 0.751,
-  13,068 fields) on a held-out tile in the Red River Valley, USA, but its crop shares were implausible
-  in Ukraine. We therefore show crop names only as "maybe …" hints and never use them in rules.
+- Crop names in Ukraine: two models trained on the 2020 crop type map of Ukraine (Zenodo 11065080)
+  reach summer macro-F1 0.83 (maize 0.90, sunflower 0.77) and winter macro-F1 0.85 on held-out tiles,
+  and the geography is right (sunflower leads in the south and east, maize in the west and north). But
+  trained on one year, their yearly shares swing in the 2024 drought, so crop names are shown only as
+  "maybe …" hints and the rules never use them. Two earlier models trained on US labels (Red River
+  Valley, then 160 tiles across the USA; macro-F1 0.75 and 0.74 on held-out US tiles) gave implausible
+  crop shares in Ukraine and were dropped.
+- USA: field history 2018–2025 is USDA CDL, not our model. The rule set for US crops has fewer sources:
+  91 of its 191 values have none yet and are shown as "not yet verified". The 2026 US season shows only
+  winter / summer / not cultivated; it has not been checked against a US map.
 - POWER climate checked against published Cherkasy normals (`docs/VALIDATION.md`).
-- *(P5: results of the team's checks on known fields.)*
 
 **Who it is for and limits**
 Farmers and agronomists planning the next seasons; it supports, and does not replace, an agronomist.
@@ -83,16 +94,23 @@ is an estimate and says so.
 
 ## Use of SI
 
-- The solution idea and every product decision came from the team.
+- The product idea came from the team: a map where tapping a field opens a game-like card with what to
+  sow, what not to sow, the risks and what to watch; rotations as combos; date-aware planning; sunflower
+  overuse as the core local problem. Every product decision was the team's.
+- Suggested by SI in discussion and adopted by the team: reconstructing crop history from yearly
+  greenness curves with a classifier, the timeline-lanes layout of the comparison, the climate-scenario
+  switch and the "x of N years" risk wording, and the choice of datasets, stack and validation design
+  (the full split is in `docs/PLAN.md` §3).
 - An SI coding assistant (Claude, through Claude Code, Anthropic) was used for research on data
   sources, planning support, writing the pipeline and web code, and drafting English texts, which the
   team reviewed and edited. The plan document was written with it before the 09:00 start; code and
   data work began on 14 Nov.
 - The logo is based on an image generated with Google Gemini, redrawn as vector by our code, and
   carries a visible "SI-assisted" mark.
-- The product contains one machine-learning model (the crop-type classifier) trained by us on open
-  labels, with its accuracy reported. Recommendations come from transparent rules, not from a
-  language model.
+- The product contains three machine-learning models trained by us on open labels, each with its
+  accuracy reported: the season-group classifier (winter / summer / not cultivated) and two crop-name
+  classifiers (summer and winter crops) whose output is shown only as hints. Recommendations come from
+  transparent rules, not from a language model.
 
 ## NASA Data
 
@@ -106,6 +124,8 @@ is an estimate and says so.
 ## Space Agency Partner Data and Other References
 
 Fields of The World (CC-BY-4.0) · KPI winter/summer crop maps of Ukraine 2019–2024, World Bank DDH
-0066913 (CC-BY-4.0) · ISRIC SoilGrids 2.0 (CC-BY-4.0) · USDA NASS Crop Sequence Boundaries (public
-domain) · OpenFreeMap / OpenStreetMap (ODbL) · Resolution No. 164 of the Cabinet of Ministers of
+0066913 (CC-BY-4.0) · 10 m crop type map of Ukraine 2020, Chen, Tu et al. 2024, Zenodo 11065080
+(CC-BY-4.0) · USDA NASS Crop Sequence Boundaries 2018–2025 with Cropland Data Layer crop codes (public
+domain) · ISRIC SoilGrids 2.0 (CC-BY-4.0) · GeoNames (CC-BY-4.0) · geoBoundaries gbOpen UKR ADM1
+(ODbL 1.0) · OpenFreeMap / OpenStreetMap (ODbL) · Resolution No. 164 of the Cabinet of Ministers of
 Ukraine · software and fonts as listed in `docs/REFERENCES.md` (MIT, BSD, Apache-2.0, OFL).

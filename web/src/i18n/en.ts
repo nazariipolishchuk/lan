@@ -13,7 +13,7 @@ export const en = {
   'top.aboutShort': "About",
   'top.guide': "Quick guide: how to use Lan",
   'top.guideShort': "Guide",
-  'intro.lead': "Pick any field in Ukraine and see what grew there, what to sow next and which rotation holds up best. Built on eleven seasons of NASA satellite data and 35 years of weather.",
+  'intro.lead': "Pick any field in Ukraine or the 48 contiguous US states and see what grew there, what to sow next and which rotation holds up best. Built on up to eleven seasons of field history from NASA satellite data (in the USA, from USDA crop maps) and 35 years of weather.",
   'intro.p1.t': "Its past.",
   'intro.p1': "Eleven harvest years, read from space for every field.",
   'intro.p2.t': "Its next season.",

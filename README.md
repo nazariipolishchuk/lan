@@ -14,11 +14,14 @@ averages, not from that field's own history.
 Lan takes the field's own history and its local weather from NASA Earth observations and turns them
 into a plan:
 
-1. **Its past.** For every field it shows eleven harvest years (2016–2026), read from NASA HLS
-   satellite greenness. For each year it says whether the field had a winter crop, a summer crop or
-   lay bare.
+1. **Its past.** For every field in Ukraine it shows eleven harvest years (2016–2026), read from NASA
+   HLS satellite greenness. For each year it says whether the field had a winter crop, a summer crop or
+   lay bare. Lan also covers the 48 contiguous US states (about 16 million fields); there the
+   2018–2025 history is the real crop record from USDA's Cropland Data Layer, not our model.
 2. **Its next season.** It shows what to sow next, scored 0–100 on water, heat, soil and disease. It
-   shows what to avoid and until which year, for example under Ukraine's minimum return intervals.
+   shows what to avoid and until which year, for example under Ukraine's minimum return intervals
+   (Resolution No. 164). US fields use a separate rule set with fewer sources (91 of 191 values have
+   none yet and are marked as unverified).
    Weather risks come as "in x of the last N years", counted from 35 years of NASA POWER weather.
 3. **Its plan.** Three ready rotations and the farmer's own plan sit side by side on one calendar. Each
    is scored, with good and bad crop sequences ("combos") and the reason and source for each.
@@ -60,7 +63,7 @@ Direct links:
 
 | Screen | What you see | Where it comes from |
 |---|---|---|
-| **Map** | Field outlines over Ukraine; country-wide layers for the latest season, drought exposure and how well rotations are kept | Fields of The World outlines; our classifier over NASA HLS |
+| **Map** | Field outlines over Ukraine and the 48 contiguous US states; country-wide layers for the latest season, drought exposure and how well rotations are kept | Ukraine: Fields of The World outlines and our classifier over NASA HLS. USA: USDA Crop Sequence Boundaries with their CDL crop history |
 | **Field card** | Size, region, slope, soil; the eleven-season history strip ("?" marks an uncertain year; **Edit** corrects it); **Sow next** with 0–100 scores; **Avoid** with the year each crop is allowed again; weather **risks** as "x of N years"; a watch calendar | HLS, NASA POWER, SoilGrids, terrain, Ukrainian rotation rules |
 | **Why?** | Eight evidence charts: greenness against the field's own range, bare-soil months, rain in the critical window, heat and frost, root-zone moisture, then and now, terrain, soil | Each chart names its source and resolution |
 | **Compare rotations** | "As now", "Balanced", "Drought-proof" and **My plan** on one month scale; scores for water, heat, soil and disease; combos and anti-combos; a climate switch (all years / last 10 / dry years only) | The rule engine, which runs in your browser |
@@ -91,8 +94,13 @@ SoilGrids, terrain, Ukrainian rotation rules ──────┘
 - **Winter / summer / bare:** 95.3 % agreement with independent Ukrainian crop maps (KPI / World Bank,
   2019–2024) on 24,626 held-out field-seasons. In other regions it ranges from 79 % (Odesa, dry south)
   to 95 % (Dnipropetrovsk). Bare fields are the weak class.
-- **Crop names** (wheat, maize, …) are shown only as "maybe …" hints and never feed the rules: a model
-  trained on US data gave implausible crop shares in Ukraine.
+- **Crop names in Ukraine** (maize, sunflower, …) are shown only as "maybe …" hints and never feed the
+  rules. They come from models trained on the 2020 crop type map of Ukraine (summer macro-F1 0.83 on
+  held-out tiles), but their yearly shares are not stable yet (the 2024 drought). Models trained on US
+  data gave implausible shares in Ukraine and were dropped.
+- **USA:** the 2018–2025 history is USDA CDL, a published crop map, so it is not our estimate. The 2026
+  season is our model's and shows only winter / summer / not cultivated; that model has not been
+  checked against a US map yet.
 - **Weather** is about 50 km per cell, **soil** 250 m. Lan cannot see soil nitrogen, weeds, pests or
   prices. It supports an agronomist's judgement and does not replace it.
 
